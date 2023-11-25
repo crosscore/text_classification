@@ -8,8 +8,11 @@ from tqdm import tqdm
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 from sklearn.model_selection import train_test_split
 import random
+import time
 import glob
 import os
+
+start = time.time()
 
 # 乱数シードを設定
 def set_seed(seed_value=369):
@@ -18,18 +21,21 @@ def set_seed(seed_value=369):
     np.random.seed(seed_value)
     torch.manual_seed(seed_value)
     if torch.cuda.is_available():
+        print("Using GPU...")
         torch.cuda.manual_seed_all(seed_value)
+        device = "cuda"
+    else:
+        print("Using cpu...")
+        device = "cpu"
 
 set_seed(369)
 
-# GPUの使用確認：True or False
-torch.cuda.is_available()
-
 # カテゴリー数と内容を確認
-files_folders = [name for name in os.listdir("../../data/livedoor/text/")]
+livedoor_news_path = "../../../livedoor_news/text/"
+files_folders = [name for name in os.listdir(livedoor_news_path)]
 print(files_folders)
 categories = [name for name in os.listdir(
-    "../../data/livedoor/text/") if os.path.isdir("../../data/livedoor/text/"+name)]
+    livedoor_news_path) if os.path.isdir(livedoor_news_path + name)]
 print("カテゴリー数:", len(categories))
 print(categories)
 
@@ -50,7 +56,7 @@ def extract_main_txt(file_name):
 list_text = []
 list_label = []
 for cat in categories:
-    text_files = glob.glob(os.path.join("../../data/livedoor/text", cat, "*.txt"))
+    text_files = glob.glob(os.path.join(livedoor_news_path, cat, "*.txt"))
     # 前処理extract_main_txtを実施して本文を取得
     body = [extract_main_txt(text_file) for text_file in text_files]
     label = [cat] * len(body)  # body数分だけカテゴリー名のラベルのリストを作成
@@ -230,3 +236,6 @@ print(f"Test Accuracy: {test_accuracy}")
 print(f"Test Precision: {test_precision}")
 print(f"Test Recall: {test_recall}")
 print(f"Test F1 Score: {test_f1}")
+
+end = time.time()
+print(f"Elapsed time: {end -start}")

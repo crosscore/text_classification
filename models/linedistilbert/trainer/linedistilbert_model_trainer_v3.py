@@ -9,6 +9,7 @@ from datasets import Dataset
 import re
 import time
 import os
+import torch
 
 def clean_text_for_bert(text):
     text = text.strip()
@@ -77,7 +78,8 @@ tokenized_train_dataset = train_dataset.map(tokenize_function, batched=True)
 tokenized_test_dataset = test_dataset.map(tokenize_function, batched=True)
 
 # モデルの設定
-model = DistilBertForSequenceClassification.from_pretrained(PRE_TRAINED, num_labels=len(le.classes_))
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model = DistilBertForSequenceClassification.from_pretrained(PRE_TRAINED, num_labels=len(le.classes_)).to(device)
 
 # 訓練設定
 training_args = TrainingArguments(

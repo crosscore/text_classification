@@ -14,21 +14,23 @@ import os
 
 start = time.time()
 
-# 乱数シードを設定
 def set_seed(seed_value=369):
     os.environ['PYTHONHASHSEED'] = str(seed_value)
     random.seed(seed_value)
     np.random.seed(seed_value)
     torch.manual_seed(seed_value)
     if torch.cuda.is_available():
-        print("Using GPU...")
         torch.cuda.manual_seed_all(seed_value)
-        device = "cuda"
-    else:
-        print("Using cpu...")
-        device = "cpu"
 
+def get_device():
+    return "cuda" if torch.cuda.is_available() else "cpu"
+
+# 乱数シードの設定
 set_seed(369)
+
+# デバイスの設定
+device = get_device()
+print(f"Using {device}...")
 
 # カテゴリー数と内容を確認
 livedoor_news_path = "../../../livedoor_news/text/"
@@ -42,14 +44,12 @@ print(categories)
 # 本文を取得する前処理関数を定義
 def extract_main_txt(file_name):
     with open(file_name, encoding='utf-8') as text_file:
-        # 今回はタイトル行は外したいので、3要素目以降の本文のみ使用
         text = text_file.readlines()[3:]
-        # 3要素目以降にも本文が入っている場合があるので、リストにして、後で結合させる
-        text = [sentence.strip() for sentence in text]  # 空白文字(スペースやタブ、改行)の削除
+        text = [sentence.strip() for sentence in text]
         text = list(filter(lambda line: line != '', text))
         text = ''.join(text)
         text = text.translate(str.maketrans(
-            {'\n': '', '\t': '', '\r': '', '\u3000': ''}))  # 改行やタブ、全角スペースを消す
+            {'\n': '', '\t': '', '\r': '', '\u3000': ''}))
         return text
 
 # リストに前処理した本文と、カテゴリーのラベルを追加していく
@@ -64,6 +64,7 @@ for cat in categories:
     list_label.extend(label)
 
 df = pd.DataFrame({'text': list_text, 'label': list_label})
+print(df)
 print(df.shape)
 
 # カテゴリーの辞書を作成
@@ -135,7 +136,7 @@ model = BertForSequenceClassification.from_pretrained(
     'cl-tohoku/bert-base-japanese-whole-word-masking',
     num_labels=len(categories)  # カテゴリの数に基づいて出力層を設定
 )
-model.to('cuda' if torch.cuda.is_available() else 'cpu')
+model.to(device)
 
 # オプティマイザと損失関数の設定
 optimizer = AdamW(model.parameters(), lr=2e-5)#2e-5:93%
@@ -145,9 +146,9 @@ def train_model(model, dataloader, optimizer):
     model.train()
     total_loss = 0
     for batch in tqdm(dataloader):
-        input_ids = batch['input_ids'].to('cuda' if torch.cuda.is_available() else 'cpu')
-        attention_mask = batch['attention_mask'].to('cuda' if torch.cuda.is_available() else 'cpu')
-        labels = batch['labels'].to('cuda' if torch.cuda.is_available() else 'cpu')
+        input_ids = batch['input_ids'].to(device)
+        attention_mask = batch['attention_mask'].to(device)
+        labels = batch['labels'].to(device)
 
         model.zero_grad()
         outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
@@ -165,9 +166,9 @@ def evaluate_model(model, dataloader):
     true_labels = []
     with torch.no_grad():
         for batch in tqdm(dataloader):
-            input_ids = batch['input_ids'].to('cuda' if torch.cuda.is_available() else 'cpu')
-            attention_mask = batch['attention_mask'].to('cuda' if torch.cuda.is_available() else 'cpu')
-            labels = batch['labels'].to('cuda' if torch.cuda.is_available() else 'cpu')
+            input_ids = batch['input_ids'].to(device)
+            attention_mask = batch['attention_mask'].to(device)
+            labels = batch['labels'].to(device)
             outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
             loss = outputs[0]
             total_loss += loss.item()
@@ -182,7 +183,7 @@ def evaluate_model(model, dataloader):
     return total_loss / len(dataloader), accuracy, precision, recall, f1
 
 # 検証データセットの準備（訓練データの一部を検証用に分割）
-val_df = train_df.sample(frac=0.1, random_state=123)  #10%を検証データセットとする
+val_df = train_df.sample(frac=0.1, random_state=369)  #10%を検証データセットとする
 train_df = train_df.drop(val_df.index)
 val_dataset = LivedoorDataset(val_df, tokenizer, max_length, dic_cat2id)
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)

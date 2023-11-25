@@ -2,10 +2,10 @@
 import pandas as pd
 import os
 
-input_old = '../csv/yahoo_news/concat/yahoo_news_concat_1124_v5.csv'
-input_new = '../csv/yahoo_news/daily/yahoo_news_articles_1125.csv'
+input_old = '../csv/yahoo_news/concat/yahoo_news_concat_1125_v2.csv'
+input_new = '../csv/yahoo_news/daily/yahoo_news_articles_1125_v3.csv'
 
-output_path = '../csv/yahoo_news/concat/yahoo_news_concat_1125.csv'
+output_path = '../csv/yahoo_news/concat/yahoo_news_concat_1125_v3.csv'
 os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
 df_original = pd.read_csv(input_old)

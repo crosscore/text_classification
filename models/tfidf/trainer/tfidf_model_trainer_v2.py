@@ -63,15 +63,15 @@ tfidf = TfidfVectorizer()
 pipeline = make_pipeline(tfidf, MultinomialNB())
 
 parameters = {
-  'multinomialnb__alpha': [0.005],
-  'tfidfvectorizer__min_df': [1],
-  'tfidfvectorizer__ngram_range': [(1, 4)]
+    'multinomialnb__alpha': [0.005],
+    'tfidfvectorizer__min_df': [1],
+    'tfidfvectorizer__ngram_range': [(1, 4)]
 }
 
 default_parameters = {
-  'multinomialnb__alpha': [1.0],
-  'tfidfvectorizer__min_df': [1],
-  'tfidfvectorizer__ngram_range': [(1, 1)]
+    'multinomialnb__alpha': [1.0],
+    'tfidfvectorizer__min_df': [1],
+    'tfidfvectorizer__ngram_range': [(1, 1)]
 }
 
 grid = GridSearchCV(pipeline, param_grid=parameters, scoring='accuracy', cv=5)

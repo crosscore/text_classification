@@ -7,6 +7,7 @@ from transformers import BertJapaneseTokenizer, DistilBertForSequenceClassificat
 from datasets import Dataset
 import re
 import time
+import os
 
 def clean_text_for_bert(text):
     # 連続するスペース、タブ、改行をスペースに置換
@@ -85,6 +86,7 @@ trainer = Trainer(
 
 trainer.train()
 output_dir = '../versions/v2/'
+os.makedirs(output_dir, exist_ok=True)
 trainer.save_model(output_dir)
 print('The model has been saved.')
 

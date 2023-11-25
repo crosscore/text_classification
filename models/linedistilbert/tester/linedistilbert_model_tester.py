@@ -13,7 +13,7 @@ def compute_metrics(p: EvalPrediction):
     return {"accuracy": accuracy_score(p.label_ids, preds)}
 
 start = time.time()
-df = pd.read_csv('./data/scraping_data/csv/concat/yahoo_news_concat_1120_v2.csv')
+df = pd.read_csv('../../../data/scraping_data/csv/yahoo_news/concat/yahoo_news_concat_1122_v2.csv')
 df['text'] = df['title'] + ' ' + df['content']
 
 # ラベルのマッピング
@@ -38,7 +38,7 @@ def tokenize_function(examples):
 tokenized_test_dataset = test_dataset.map(tokenize_function, batched=True)
 
 # モデルのロード
-model = DistilBertForSequenceClassification.from_pretrained('./model/linedistilbert/original_texts/', num_labels=len(unique_categories))
+model = DistilBertForSequenceClassification.from_pretrained('../versions/v2/', num_labels=len(unique_categories))
 
 # トレーナーの設定
 trainer = Trainer(

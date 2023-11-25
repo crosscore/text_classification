@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import csv
 import time
 
-output_file = '../csv/yahoo_news/daily/yahoo_news_articles_1124_v2.csv'
+output_file = '../csv/yahoo_news/daily/yahoo_news_articles_1125.csv'
 skipped_articles = 0
 
 urls = {

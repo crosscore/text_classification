@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from transformers import BertJapaneseTokenizer, DistilBertForSequenceClassification, Trainer, TrainingArguments
 from datasets import Dataset
 import re
@@ -10,32 +10,24 @@ import time
 
 def clean_text_for_bert(text):
     # 連続するスペース、タブ、改行をスペースに置換
-    text = re.sub(r'\s+', ' ', text)
+    #text = re.sub(r'\s+', ' ', text)
     text = text.strip()
     return text
 
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
-    # logitsがタプルの場合、その中身を確認
-    if isinstance(logits, tuple):
-        print("Logits is a tuple, contents:", logits)
-        # 予測スコアが含まれている部分を選択
-        logits = logits[0]  # 例：最初の要素が予測スコアを含んでいる場合
-
-    print("Logits shape:", logits.shape)
-    try:
-        predictions = np.argmax(logits, axis=-1)
-    except Exception as e:
-        print("Error in argmax:", e)
-        print("Logits:", logits)
-        raise
-    return {'accuracy': accuracy_score(labels, predictions)}
+    predictions = np.argmax(logits, axis=-1)
+    accuracy = accuracy_score(labels, predictions)
+    precision = precision_score(labels, predictions, average='weighted')
+    recall = recall_score(labels, predictions, average='weighted')
+    f1 = f1_score(labels, predictions, average='weighted')
+    return {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1': f1}
 
 start = time.time()
-df = pd.read_csv('../../../data/scraping_data/csv/yahoo_news/concat/yahoo_news_concat_1123_v2.csv')
+df = pd.read_csv('../../../data/scraping_data/csv/yahoo_news/concat/yahoo_news_concat_1124_v3.csv')
 
 df['text'] = df['title'] + '。' + df['content']
-#df['text'] = df['text'].apply(clean_text_for_bert)
+df['text'] = df['text'].apply(clean_text_for_bert)
 print(df)
 print(df['text'])
 
@@ -73,12 +65,12 @@ model = DistilBertForSequenceClassification.from_pretrained(PRE_TRAINED, num_lab
 # 訓練設定
 training_args = TrainingArguments(
     output_dir='./result',
-    num_train_epochs=5,
-    per_device_train_batch_size=16,
-    per_device_eval_batch_size=16,
+    num_train_epochs=3,
+    per_device_train_batch_size=8,
+    per_device_eval_batch_size=8,
     evaluation_strategy="epoch",
     save_strategy="epoch",
-    learning_rate=3e-5,
+    learning_rate=5e-4,
     remove_unused_columns=True
 )
 # トレーナーの設定
@@ -91,7 +83,6 @@ trainer = Trainer(
     compute_metrics=compute_metrics
 )
 
-print('trainer.train()')
 trainer.train()
 output_dir = '../versions/v2/'
 trainer.save_model(output_dir)

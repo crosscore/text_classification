@@ -1,3 +1,4 @@
+./gitignore
 .DS_Store
 ./versions
 ./experimental_data

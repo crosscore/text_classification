@@ -1,4 +1,4 @@
-#linedistilbert_model_trainer.py
+#linedistilbert_model_trainer_v3.py
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -17,6 +17,25 @@ def clean_text_for_bert(text):
 
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
+
+    # logits がタプルの場合、最初の要素を使用
+    if isinstance(logits, tuple):
+        logits = logits[0]
+
+    # logits の型と形状を確認
+    print(type(logits))
+    if isinstance(logits, np.ndarray):
+        print(logits.shape)
+    elif isinstance(logits, tuple):
+        print("logits is a tuple, check its contents.")
+
+    #二値分類の場合、logitsを[0, 1]に変換
+    if logits.ndim == 1 or logits.shape[1] == 1:
+        predictions = np.where(logits < 0.5, 0, 1)
+    #多クラス分類の場合、argmaxを用いてラベルを取得
+    else:
+        predictions = np.argmax(logits, axis=-1)
+
     predictions = np.argmax(logits, axis=-1)
     accuracy = accuracy_score(labels, predictions)
     precision = precision_score(labels, predictions, average='weighted')
@@ -58,6 +77,10 @@ print(label_mapping)
 # 訓練データとテストデータに分割
 train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
 
+# # 訓練データとテストデータのサイズを一時的に減らす
+# train_df = train_df.sample(frac=0.01, random_state=42)
+# test_df = test_df.sample(frac=0.01, random_state=42)
+
 # データセットの作成
 train_dataset = Dataset.from_dict({'text': train_df['text'].tolist(), 'label': train_df['label'].tolist()})
 test_dataset = Dataset.from_dict({'text': test_df['text'].tolist(), 'label': test_df['label'].tolist()})
@@ -69,7 +92,6 @@ tokenizer = BertJapaneseTokenizer.from_pretrained(PRE_TRAINED)
 # トークナイズ関数の定義
 def tokenize_function(examples):
     tokenized_inputs =tokenizer(examples['text'], padding=True, truncation=True, max_length=512)
-    # 必要なキーのみを保持する
     tokenized_inputs = {key: tokenized_inputs[key] for key in ['input_ids', 'attention_mask']}
     return tokenized_inputs
 
@@ -84,11 +106,14 @@ model = DistilBertForSequenceClassification.from_pretrained(PRE_TRAINED, num_lab
 # 訓練設定
 training_args = TrainingArguments(
     output_dir='./result',
-    num_train_epochs=5,
+    num_train_epochs=10,
     per_device_train_batch_size=64,
     per_device_eval_batch_size=64,
+    logging_strategy="epoch",
     evaluation_strategy="epoch",
     save_strategy="epoch",
+    #warmup_steps=500, # 学習率の下がりを待つステップ数
+    #lr_scheduler_type="linear", # 学習率の下がりを選択する方法
     learning_rate=2e-5,
     load_best_model_at_end=True,
     metric_for_best_model="loss", # どのmetricを改善の基準とするか

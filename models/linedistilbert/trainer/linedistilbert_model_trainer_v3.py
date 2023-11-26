@@ -62,7 +62,7 @@ def livedoor_news_to_df(root_dir):
 start = time.time()
 # livedoor_news_dir = '../../../../livedoor_news/text'
 # df = livedoor_news_to_df(livedoor_news_dir)
-df = pd.read_csv('../../../data/scraping_data/csv/yahoo_news/concat/yahoo_news_concat_1126_v2.csv')
+df = pd.read_csv('../../../data/scraping_data/csv/yahoo_news/concat/yahoo_news_concat_1126_v3.csv')
 df['text'] = df['title'] + '。' + df['content']
 df['text'] = df['text'].apply(clean_text_for_bert)
 print(df)
@@ -107,8 +107,8 @@ training_args = TrainingArguments(
     logging_strategy="epoch",
     evaluation_strategy="epoch",
     save_strategy="epoch",
-    #warmup_steps=500, # 学習率の下がりを待つステップ数
-    #lr_scheduler_type="linear", # 学習率の下がりを選択する方法
+    warmup_steps=500, # 学習率の下がりを待つステップ数
+    lr_scheduler_type="linear", # 学習率の下がりを選択する方法
     learning_rate=2e-5,
     load_best_model_at_end=True,
     metric_for_best_model="loss", # どのmetricを改善の基準とするか
@@ -127,7 +127,7 @@ trainer = Trainer(
 )
 
 trainer.train()
-output_dir = '../versions/v3/'
+output_dir = '../versions/v3.01/'
 os.makedirs(output_dir, exist_ok=True)
 trainer.save_model(output_dir)
 print('The model has been saved.')

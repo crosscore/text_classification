@@ -4,4 +4,4 @@ daily
 data/scraping_data/csv/yahoo_news/warehouse/
 data/scraping_data/csv/yahoo_news/daily/
 models/linedistilbert/trainer/result/
-models/linedistilbert/trainer/versions/
+models/linedistilbert/versions/

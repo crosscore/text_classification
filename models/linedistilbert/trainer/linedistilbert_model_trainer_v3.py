@@ -60,21 +60,19 @@ def livedoor_news_to_df(root_dir):
     return pd.DataFrame(data, columns=['category', 'title', 'content'])
 
 start = time.time()
-livedoor_news_dir = '../../../../livedoor_news/text'
-df = livedoor_news_to_df(livedoor_news_dir)
-#df = pd.read_csv('../../../data/scraping_data/csv/yahoo_news/concat/yahoo_news_concat_1125_v2.csv')
+# livedoor_news_dir = '../../../../livedoor_news/text'
+# df = livedoor_news_to_df(livedoor_news_dir)
+df = pd.read_csv('../../../data/scraping_data/csv/yahoo_news/concat/yahoo_news_concat_1126_v2.csv')
 df['text'] = df['title'] + '。' + df['content']
 df['text'] = df['text'].apply(clean_text_for_bert)
 print(df)
 print(df['text'])
 
-# LabelEncoderを使用してラベルをエンコード
 le = LabelEncoder()
 df['label'] = le.fit_transform(df['category'])
 label_mapping = dict(zip(le.classes_, range(len(le.classes_))))
 print(label_mapping)
 
-# 訓練データとテストデータに分割
 train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
 
 # # 訓練データとテストデータのサイズを一時的に減らす
@@ -89,7 +87,6 @@ test_dataset = Dataset.from_dict({'text': test_df['text'].tolist(), 'label': tes
 PRE_TRAINED = 'line-corporation/line-distilbert-base-japanese'
 tokenizer = BertJapaneseTokenizer.from_pretrained(PRE_TRAINED)
 
-# トークナイズ関数の定義
 def tokenize_function(examples):
     tokenized_inputs =tokenizer(examples['text'], padding=True, truncation=True, max_length=512)
     tokenized_inputs = {key: tokenized_inputs[key] for key in ['input_ids', 'attention_mask']}
@@ -99,11 +96,9 @@ def tokenize_function(examples):
 tokenized_train_dataset = train_dataset.map(tokenize_function, batched=True)
 tokenized_test_dataset = test_dataset.map(tokenize_function, batched=True)
 
-# モデルの設定
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = DistilBertForSequenceClassification.from_pretrained(PRE_TRAINED, num_labels=len(le.classes_)).to(device)
 
-# 訓練設定
 training_args = TrainingArguments(
     output_dir='./result',
     num_train_epochs=10,
@@ -120,7 +115,7 @@ training_args = TrainingArguments(
     greater_is_better=False, # metricが小さいほど良い場合はFalse
     remove_unused_columns=True
 )
-# トレーナーの設定
+
 trainer = Trainer(
     model=model,
     args=training_args,

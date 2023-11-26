@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import csv
 import time
 
-output_file = '../csv/yahoo_news/daily/yahoo_news_articles_1126_v2.csv'
+output_file = '../csv/yahoo_news/daily/yahoo_news_articles_1126_v3.csv'
 skipped_articles = 0
 
 urls = {
@@ -37,7 +37,8 @@ def scrape_news(category, url):
       for item in soup.find_all("a", class_="newsFeed_item_link"):
         title = item.find("div", class_="newsFeed_item_title").get_text(strip=True)
         link = item['href']
-        print(f"category: {category}, link: {link}, title: {title}")
+        print(f"category: {category}, title: {title}")
+        print(f"link: {link}")
         articles.append((category, title, link))
       time.sleep(0.6)
       return articles

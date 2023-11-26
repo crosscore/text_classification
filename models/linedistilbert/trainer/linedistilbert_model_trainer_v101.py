@@ -1,4 +1,4 @@
-#linedistilbert_model_trainer_v3.py
+#linedistilbert_model_trainer_v100.py
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -62,7 +62,7 @@ def livedoor_news_to_df(root_dir):
 start = time.time()
 # livedoor_news_dir = '../../../../livedoor_news/text'
 # df = livedoor_news_to_df(livedoor_news_dir)
-df = pd.read_csv('../../../data/scraping_data/csv/yahoo_news/concat/yahoo_news_concat_1126_v3.csv')
+df = pd.read_csv('../../../data/scraping_data/csv/yahoo_news/concat/yahoo_news_concat_1126_v4.csv')
 df['text'] = df['title'] + '。' + df['content']
 df['text'] = df['text'].apply(clean_text_for_bert)
 print(df)
@@ -101,7 +101,7 @@ model = DistilBertForSequenceClassification.from_pretrained(PRE_TRAINED, num_lab
 
 training_args = TrainingArguments(
     output_dir='./result',
-    num_train_epochs=10,
+    num_train_epochs=20,
     per_device_train_batch_size=64,
     per_device_eval_batch_size=64,
     logging_strategy="epoch",
@@ -109,11 +109,12 @@ training_args = TrainingArguments(
     save_strategy="epoch",
     warmup_steps=500, # 学習率の下がりを待つステップ数
     lr_scheduler_type="linear", # 学習率の下がりを選択する方法
-    learning_rate=2e-5,
+    learning_rate=3e-5,#2e-5: 85.5%, 6 epoch
     load_best_model_at_end=True,
     metric_for_best_model="loss", # どのmetricを改善の基準とするか
     greater_is_better=False, # metricが小さいほど良い場合はFalse
-    remove_unused_columns=True
+    remove_unused_columns=True,
+    report_to='tensorboard',
 )
 
 trainer = Trainer(
@@ -127,7 +128,7 @@ trainer = Trainer(
 )
 
 trainer.train()
-output_dir = '../versions/v3.01/'
+output_dir = '../versions/v101/'
 os.makedirs(output_dir, exist_ok=True)
 trainer.save_model(output_dir)
 print('The model has been saved.')

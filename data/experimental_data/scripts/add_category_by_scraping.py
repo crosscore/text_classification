@@ -19,13 +19,13 @@ category_dict = {
     'local': '地域',
 }
 
-def get_category_from_archive(url, max_retries=6, wait_seconds=15):
+def get_category_from_archive(url, max_retries=6, wait_seconds=10):
     retries = 0
-    time.sleep(3)
+    time.sleep(1.5)
     while retries < max_retries:
         try:
             archive_url = f'https://web.archive.org/web/{url}'
-            response = requests.get(archive_url, timeout=18)
+            response = requests.get(archive_url, timeout=20)
             soup = BeautifulSoup(response.content, 'html.parser')
             scripts = soup.find_all('script')
             for script in scripts:

@@ -123,7 +123,6 @@ def get_category_from_archive(url, max_retries=5, wait_seconds=12, max_wait_seco
                         return 'スポーツ'
     return "retry_limit_exceeded"
 
-
 exit_command_issued = False
 exit_thread = False
 
@@ -156,17 +155,10 @@ exit_command_issued = False
 exit_listener = threading.Thread(target=listen_for_exit_command)
 exit_listener.start()
 
-df = pd.read_csv('../csv/original/device_original.csv', dtype={'user': str})
-# 'category' 列が存在しない場合は、空の列を作成
-if 'category' not in df.columns:
-    print("Adding 'None' to the category column")
-    df['category'] = None
-print(df)
-
 retry_limit_exceeded = False
 exit_command_detected = False #スレッド終了フラグ
 
-error_urls = []  # エラーが発生したURLのリスト
+error_urls = []
 categories = []
 for index, row in df.iterrows():
     if exit_command_issued:
@@ -184,7 +176,7 @@ for index, row in df.iterrows():
     if category in ["retry_limit_exceeded", "request_exception"]:
         print("Error occurred. URL will be reprocessed later.")
         categories.append(None)  # エラー時はNoneを追加
-        error_urls.append((row['url'], row['title']))  # エラーが発生したURLを保存
+        error_urls.append((row['url'], row['title']))
         continue
     # 取得したカテゴリをリストに追加
     categories.append(category)

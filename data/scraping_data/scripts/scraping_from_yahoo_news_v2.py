@@ -2,12 +2,6 @@
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import NoSuchElementException
 import csv
 import time
 import os
@@ -38,21 +32,11 @@ else:
 print(output_file)
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
 skipped_articles = 0
-# urls = {
-#     '国内': 'https://news.yahoo.co.jp/topics/domestic',
-#     '国際': 'https://news.yahoo.co.jp/topics/world',
-#     '経済': 'https://news.yahoo.co.jp/topics/business',
-#     'エンタメ': 'https://news.yahoo.co.jp/topics/entertainment',
-#     'スポーツ': 'https://news.yahoo.co.jp/topics/sports',
-#     'IT': 'https://news.yahoo.co.jp/topics/it',
-#     '科学': 'https://news.yahoo.co.jp/topics/science',
-#     'ライフ': 'https://news.yahoo.co.jp/categories/life',
-#     '地域': 'https://news.yahoo.co.jp/topics/local'
-# }
-urls = {
-    'ライフ': 'https://news.yahoo.co.jp/categories/life'
-}
-add_url_list = ['?page=1', '?page=2', '?page=3', '?page=4', '?page=5', '?page=6']
+
+base_url = 'https://news.yahoo.co.jp/rss/categories/'
+categories = ['国内', '国際', '経済', 'エンタメ', 'スポーツ', 'IT', '科学', 'ライフ', '地域']
+urls = {category: f'{base_url}{category}.xml' for category in categories}
+
 MAX_RETRIES = 6
 RETRY_INTERVAL = 12 # seconds
 
@@ -67,12 +51,13 @@ def scrape_news(category, url):
                 print(f"Error page detected, skipping remaining page for ({category}) url:{url}")
                 return []
             articles = []
-            for item in soup.find_all("a", class_="newsFeed_item_link"):
-                title = item.find("div", class_="newsFeed_item_title").get_text(strip=True)
-                link = item['href']
+            for item in soup.find_all("item"):
+                title = item.find("title").get_text(strip=True)
+                link = item.find("link").get_text(strip=True)
+                clean_link = link.split('?source=rss')[0]
                 print(f"category: {category}, title: {title}")
-                print(f"link: {link}")
-                articles.append((category, title, link))
+                print(f"link: {clean_link}")
+                articles.append((category, title, clean_link))
             time.sleep(1)
             return articles
         except:
@@ -101,82 +86,29 @@ def scrape_article_content(link,  MAX_RETRIES = 6):
     skipped_articles += 1
     return ""
 
-def scrape_dynamic_news2(url, max_clicks=30):
-    options = Options()
-    options.headless = True  # ブラウザをGUIなしで起動
-    options.add_argument("--disable-logging")  # ログ出力を無効にする
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    driver.get(url)
-    articles = []
-    for _ in range(max_clicks):
-        try:
-            more_button = driver.find_element(By.CLASS_NAME, 'FeedLoadMoreButton__ReadMoreButton-kbeqvq')
-            driver.execute_script("arguments[0].click();", more_button)
-            time.sleep(5)
-        except NoSuchElementException:
-            print("No more 'もっと見る' button found.")
-            break
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    driver.quit()
-    for item in soup.find_all("a", class_="newsFeed_item_link"):
-        title = item.find("div", class_="newsFeed_item_title").get_text(strip=True)
-        link = item['href']
-        articles.append((title, link))
-    return articles
-
-def scrape_dynamic_news(url):
-    options = Options()
-    options.headless = True
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    driver.get(url)
-    articles = []
-    # すべての関連するクラス名を含むボタンを取得
-    button_classes = ['sc-glMzqP.bVVtQV', 'TabItemText__Button-mjrpV.sAzpp', 'TabItemText__Button-mjrpV.cqquRy']
-    for class_name in button_classes:
-        buttons = driver.find_elements(By.CLASS_NAME, class_name)
-        for button in buttons:
-            try:
-                print(f"Clicking button: {button.text}")
-                time.sleep(3)
-                button.click()
-                time.sleep(2)
-                new_page = driver.current_url
-                articles.append(new_page)
-            except Exception as e:
-                print(f"Error occurred while clicking or loading page: {e}")
-    driver.quit()
-    return articles
-
 print('Start scraping.')
 start = time.time()
 all_articles = []
 for category, url in urls.items():
-    if category == 'ライフ':
-        print(f'category: {category}, url: {url}')
-        dynamic_articles = scrape_dynamic_news(url)
-        for title, link in dynamic_articles:
-            all_articles.append((category, title, link))
-        print(f'Found {len(dynamic_articles)} dynamic articles.')
-    else:
-        for add_url in add_url_list:
-            url_with_page = url + add_url
-            print(f'category: {category}, url: {url_with_page}')
-            articles = scrape_news(category, url_with_page)
-            if not articles:
-                break
-            print(f'Found {len(articles)} articles.')
-            all_articles.extend(articles)
+    print(f'category: {category}, url: {url}')
+    articles = scrape_news(category, url)
+    if not articles:
+        break
+    print(f'Found {len(articles)} articles.')
+    all_articles.extend(articles)
 print(f'Complete. Found {len(all_articles)} articles.')
-with open(output_file, 'w', newline='', encoding='utf-8') as file:
-    writer = csv.writer(file)
-    writer.writerow(['category', 'title', 'url', 'content'])
-    for article in all_articles:
-        category, title, link = article
-        print(f'Scraping ({category}) {title} ...')
-        content = scrape_article_content(link)
-        print(f'Found {len(content)} characters.')
-        writer.writerow([category, title, link, content])
-        time.sleep(0.9)
+
+all_articles_data = []
+for article in all_articles:
+    category, title, link = article
+    print(f'Scraping ({category}) {title} ...')
+    content = scrape_article_content(link)
+    print(f'Found {len(content)} characters.')
+    all_articles_data.append([category, title, link, content])
+    time.sleep(0.9)
+df = pd.DataFrame(all_articles_data, columns=['category', 'title', 'url', 'content'])
+df.to_csv(output_file, index=False, encoding='utf-8')
+
 print('End scraping.')
 print(f'Number of skipped articles: {skipped_articles}')
 end = time.time()

@@ -134,8 +134,6 @@ def get_category_from_archive(url, max_retries=5, wait_seconds=12, max_wait_seco
     print("Retry_limit_exceeded.")
     return "retry_limit_exceeded"
 
-exit_command_issued = False
-exit_thread = False
 
 def listen_for_exit_command():
     global exit_command_issued
@@ -145,13 +143,17 @@ def listen_for_exit_command():
         exit_command_issued = True
         break
 
+
 start = time.time()
+exit_command_issued = False
+exit_thread = False
+
 output_dir = "../csv/add_category"
 os.makedirs(output_dir, exist_ok=True)
 output_file_complete = "../csv/add_category/device_with_category.csv"
 output_file_partial = "../csv/add_category/device_with_category_partial.csv"
 
-# 部分的に処理されたファイルが存在するか確認
+# "device_with_category_partial.csv"の存否により処理を分岐
 if os.path.exists(output_file_partial):
     print(f"Loading partial data from {output_file_partial}")
     df = pd.read_csv(output_file_partial, dtype={'user': str})

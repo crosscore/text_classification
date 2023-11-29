@@ -123,9 +123,6 @@ def get_category_from_archive(url, max_retries=6, wait_seconds=12, max_wait_seco
             except requests.exceptions.TooManyRedirects as e:
                 print(f"Too many redirects for URL {url}: {e}")
                 return "too_many_redirects"
-            except requests.RequestException as e:
-                print(f"Error processing URL {url}: {e}")
-                return "request_exception"
             except requests.exceptions.RequestException as e:
                 print(f"Error with URL {url}: {e}")
                 retries += 1
@@ -187,6 +184,7 @@ for index, row in df.iterrows():
             categories.append(None) #未割り当ての行にはNoneを追加
         df['category'] = categories  # 現在までの結果を保存
         df.to_csv(output_file_partial, index=False)
+        print(f"{output_file_partial} was saved: ")
         exit_command_detected = True
         break
     # 既にカテゴリが割り当てられている行はスキップ

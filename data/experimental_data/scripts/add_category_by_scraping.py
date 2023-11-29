@@ -27,7 +27,7 @@ def file_exists(file_path):
     return os.path.exists(file_path)
 
 def parse_html_for_category(html_content):
-    print("Analyzing html_content...")
+    print("--- parse_html_for_category ---")
     soup = BeautifulSoup(html_content, 'html.parser')
     scripts = soup.find_all('script')
     category_found = False
@@ -70,9 +70,9 @@ def parse_html_for_category(html_content):
         print("######### Category not found in HTML content. #########")
         return "category_not_found"
 
-def get_category_from_archive(url, max_retries=5, wait_seconds=12, max_wait_seconds=60):
-    time.sleep(3.9)
-    print(f"Analyzing {url}")
+def get_category_from_archive(url, max_retries=6, wait_seconds=12, max_wait_seconds=60):
+    time.sleep(6)
+    print(f"--------------- Analyzing {url} ---------------")
     retries = 0
     html_dir = '../html/archive_files/'
     file_name = sanitize_filename(url)
@@ -101,20 +101,19 @@ def get_category_from_archive(url, max_retries=5, wait_seconds=12, max_wait_seco
                 html_content = response.text
                 break
             except requests.exceptions.Timeout as e:
-                print(f"Timeout error with URL {url}: {e}")
+                print(f"Timeout with URL {url}: {e}")
                 retries += 1
                 print(f"Retrying... ({retries}/{max_retries})")
                 time.sleep(wait_seconds)
             except requests.exceptions.ConnectionError as e:
-                print(f"Connection error with URL {url}: {e}")
+                print(f"ConnectionError with URL {url}: {e}")
                 retries += 1
                 print(f"Retrying... ({retries}/{max_retries})")
                 time.sleep(wait_seconds)
             except requests.exceptions.HTTPError as e:
-                # 404エラーを特定して処理
                 if e.response.status_code == 404:
                     print(f"404 Not Found error for URL {url}: {e}")
-                    return "not_found"
+                    return "404_not_found"
                 else:
                     print(f"HTTP error with URL {url}: {e}")
                     retries += 1
@@ -127,6 +126,12 @@ def get_category_from_archive(url, max_retries=5, wait_seconds=12, max_wait_seco
             except requests.RequestException as e:
                 print(f"Error processing URL {url}: {e}")
                 return "request_exception"
+            except requests.exceptions.RequestException as e:
+                print(f"Error with URL {url}: {e}")
+                retries += 1
+                print(f"Retrying... ({retries}/{max_retries})")
+                time.sleep(wait_seconds)
+                wait_seconds = min(wait_seconds * 2, max_wait_seconds)  # 待機時間を倍にして、最大値に制限を設ける
 
     # HTMLの内容を解析してカテゴリを見つける
     if html_content:

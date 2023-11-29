@@ -1,49 +1,55 @@
-#scraping_from_yahoo_news.py
+#scraping_from_yahoo_news_v2.py
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-import csv
 import time
 import os
 import datetime
 import re
 
-# 今日の日付を取得し、指定されたフォーマットに変換
 today_date = datetime.datetime.now().strftime('%Y%m%d')
-files = os.listdir('../csv/yahoo_news/concat/')
-# ファイル名から日付とバージョンを抽出するための正規表現
-pattern = re.compile(rf'{today_date}_v(\d+)\.csv$')
-# 最新のバージョンを探す
-latest_version = 0
-for file in files:
-    match = pattern.search(file)
-    if match:
-        version = int(match.group(1)) #group(0): 正規表現に一致した全体の文字列,　group(1): 1番目のグループの文字列
-        if version > latest_version:
-            latest_version = version
-# 今日の日付のファイルが存在しない場合、v1として設定
-if latest_version == 0:
-    print("First scraping today.")
-    output_file = f'../csv/yahoo_news/daily/yahoo_news_articles_{today_date}_v1.csv'
-else:
-    # 新たなバージョン番号を設定
+concat_dir = '../csv/yahoo_news/concat/'
+
+if os.path.exists(concat_dir) and os.listdir(concat_dir):
+    files = os.listdir(concat_dir)
+    pattern = re.compile(rf'{today_date}_v(\d+)\.csv$')
+    latest_version = 0
+    for file in files:
+        match = pattern.search(file)
+        if match:
+            version = int(match.group(1))
+            if version > latest_version:
+                latest_version = version
     next_version = latest_version + 1
     output_file = f'../csv/yahoo_news/daily/yahoo_news_articles_{today_date}_v{next_version}.csv'
+else:
+    print("First scraping today or directory does not exist or is empty.")
+    output_file = f'../csv/yahoo_news/daily/yahoo_news_articles_{today_date}_v1.csv'
 print(output_file)
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
-skipped_articles = 0
 
 base_url = 'https://news.yahoo.co.jp/rss/categories/'
-categories = ['国内', '国際', '経済', 'エンタメ', 'スポーツ', 'IT', '科学', 'ライフ', '地域']
-urls = {category: f'{base_url}{category}.xml' for category in categories}
+categories = {
+    '国内': 'domestic',
+    '国際': 'world',
+    '経済': 'business',
+    'エンタメ': 'entertainment',
+    'スポーツ': 'sports',
+    'IT': 'it',
+    '科学': 'science',
+    'ライフ': 'life',
+    '地域': 'local'
+}
+urls = {category: f'{base_url}{categories[category]}.xml' for category in categories}
 
+skipped_articles = 0
 MAX_RETRIES = 6
 RETRY_INTERVAL = 12 # seconds
 
 def scrape_news(category, url):
     for i in range(MAX_RETRIES):
         try:
-            print(f'scrape_news... category: {category}, url: {url}')
+            print(f'scrape_news... {category}: {url}')
             response = requests.get(url, timeout=(12, 18))
             print(response.status_code)
             soup = BeautifulSoup(response.content, 'html.parser')
@@ -53,11 +59,11 @@ def scrape_news(category, url):
             articles = []
             for item in soup.find_all("item"):
                 title = item.find("title").get_text(strip=True)
-                link = item.find("link").get_text(strip=True)
-                clean_link = link.split('?source=rss')[0]
-                print(f"category: {category}, title: {title}")
-                print(f"link: {clean_link}")
-                articles.append((category, title, clean_link))
+                link_tag = item.find("link")
+                link = link_tag.next_sibling.strip() if link_tag else ""  # <link> タグの次のテキストノードを取得
+                print(f"{category}: {title}")
+                print(f"{link}")
+                articles.append((category, title, link))
             time.sleep(1)
             return articles
         except:
@@ -90,7 +96,7 @@ print('Start scraping.')
 start = time.time()
 all_articles = []
 for category, url in urls.items():
-    print(f'category: {category}, url: {url}')
+    print(f'{category}: {url}')
     articles = scrape_news(category, url)
     if not articles:
         break

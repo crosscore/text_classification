@@ -63,10 +63,11 @@ def parse_html_for_category(html_content):
         metatags = soup.find_all('meta')
         for meta in metatags:
             if 'name' in meta.attrs and meta.attrs['name'] == 'description':
-                content = meta.attrs.get('content', '')
-                if 'sports' in content.lower():
+                content = meta.attrs.get('content', '').lower()  # 小文字に変換
+                if 'スポーツ' in content:  # 'スポーツ'が含まれているかチェック
+                    print("Discover categories among meta tags: return 'スポーツ'")
                     return 'スポーツ'
-        print("Category not found in HTML content.")
+        print("######### Category not found in HTML content. #########")
         return "category_not_found"
 
 def get_category_from_archive(url, max_retries=5, wait_seconds=12, max_wait_seconds=60):

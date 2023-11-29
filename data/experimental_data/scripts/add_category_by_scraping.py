@@ -70,8 +70,8 @@ def parse_html_for_category(html_content):
         print("######### Category not found in HTML content. #########")
         return "category_not_found"
 
-def get_category_from_archive(url, max_retries=6, wait_seconds=12, max_wait_seconds=60):
-    time.sleep(6)
+def get_category_from_archive(url, max_retries=3, wait_seconds=12, max_wait_seconds=60):
+    time.sleep(9)
     print(f"--------------- Analyzing {url} ---------------")
     retries = 0
     html_dir = '../html/archive_files/'
@@ -79,7 +79,6 @@ def get_category_from_archive(url, max_retries=6, wait_seconds=12, max_wait_seco
     file_path = f'{html_dir}{file_name}'
     print(file_path)
     html_content = ''
-
     if file_exists(file_path):
         print(f'File already exists: {file_path}')
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -114,6 +113,9 @@ def get_category_from_archive(url, max_retries=6, wait_seconds=12, max_wait_seco
                 if e.response.status_code == 404:
                     print(f"404 Not Found error for URL {url}: {e}")
                     return "404_not_found"
+                elif e.response.status_code == 403:
+                    print(f"403 Forbidden error for URL {url}: {e}")
+                    return "403_forbidden"
                 else:
                     print(f"HTTP error with URL {url}: {e}")
                     retries += 1
@@ -129,14 +131,11 @@ def get_category_from_archive(url, max_retries=6, wait_seconds=12, max_wait_seco
                 print(f"Retrying... ({retries}/{max_retries})")
                 time.sleep(wait_seconds)
                 wait_seconds = min(wait_seconds * 2, max_wait_seconds)  # 待機時間を倍にして、最大値に制限を設ける
-
     # HTMLの内容を解析してカテゴリを見つける
     if html_content:
         return parse_html_for_category(html_content)
-
     print("Retry_limit_exceeded.")
     return "retry_limit_exceeded"
-
 
 def listen_for_exit_command():
     global exit_command_issued
@@ -210,12 +209,13 @@ if not exit_command_detected:
     else:
         print("All data processed successfully. Saving data...")
         df.to_csv(output_file_complete, index=False)
-    # error_urlsが空でなければ、それをCSVファイルとして保存
-    if error_urls:
-        error_df = pd.DataFrame(error_urls, columns=['url', 'title'])
-        error_output_file = "../csv/add_category/error_urls.csv"
-        error_df.to_csv(error_output_file, index=False)
-        print(f"Error URLs saved to {error_output_file}")
+
+# error_urlsが空でなければ、それをCSVファイルとして保存
+if error_urls:
+    error_df = pd.DataFrame(error_urls, columns=['url', 'title'])
+    error_output_file = "../csv/add_category/error_urls.csv"
+    error_df.to_csv(error_output_file, index=False)
+    print(f"Error URLs saved to {error_output_file}")
 
 exit_thread = True
 exit_listener.join()

@@ -101,7 +101,7 @@ def scrape_article_content(link,  MAX_RETRIES = 6):
     skipped_articles += 1
     return ""
 
-def scrape_dynamic_news(url, max_clicks=30):
+def scrape_dynamic_news2(url, max_clicks=30):
     options = Options()
     options.headless = True  # ブラウザをGUIなしで起動
     options.add_argument("--disable-logging")  # ログ出力を無効にする
@@ -122,6 +122,29 @@ def scrape_dynamic_news(url, max_clicks=30):
         title = item.find("div", class_="newsFeed_item_title").get_text(strip=True)
         link = item['href']
         articles.append((title, link))
+    return articles
+
+def scrape_dynamic_news(url):
+    options = Options()
+    options.headless = True
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    driver.get(url)
+    articles = []
+    # すべての関連するクラス名を含むボタンを取得
+    button_classes = ['sc-glMzqP.bVVtQV', 'TabItemText__Button-mjrpV.sAzpp', 'TabItemText__Button-mjrpV.cqquRy']
+    for class_name in button_classes:
+        buttons = driver.find_elements(By.CLASS_NAME, class_name)
+        for button in buttons:
+            try:
+                print(f"Clicking button: {button.text}")
+                time.sleep(3)
+                button.click()
+                time.sleep(2)
+                new_page = driver.current_url
+                articles.append(new_page)
+            except Exception as e:
+                print(f"Error occurred while clicking or loading page: {e}")
+    driver.quit()
     return articles
 
 print('Start scraping.')

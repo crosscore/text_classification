@@ -64,7 +64,7 @@ def parse_html_for_category(html_content):
         for meta in metatags:
             if 'name' in meta.attrs and meta.attrs['name'] == 'description':
                 content = meta.attrs.get('content', '').lower()  # 小文字に変換
-                if 'スポーツ' in content:  # 'スポーツ'が含まれているかチェック
+                if 'スポーツ' in content:
                     print("Discover categories among meta tags: return 'スポーツ'")
                     return 'スポーツ'
         print("######### Category not found in HTML content. #########")
@@ -73,7 +73,6 @@ def parse_html_for_category(html_content):
 def get_category_from_archive(url, max_retries=3, wait_seconds=12, max_wait_seconds=60):
     time.sleep(9)
     print(f"--------------- Analyzing {url} ---------------")
-    #現在の時刻をprint
     now = time.time()
     print(f"Current time: {now}")
     retries = 0
@@ -133,7 +132,7 @@ def get_category_from_archive(url, max_retries=3, wait_seconds=12, max_wait_seco
                 retries += 1
                 print(f"Retrying... ({retries}/{max_retries})")
                 time.sleep(wait_seconds)
-                wait_seconds = min(wait_seconds * 2, max_wait_seconds)  # 待機時間を倍にして、最大値に制限を設ける
+                wait_seconds = min(wait_seconds * 2, max_wait_seconds)
     # HTMLの内容を解析してカテゴリを見つける
     if html_content:
         return parse_html_for_category(html_content)
@@ -158,7 +157,7 @@ os.makedirs(output_dir, exist_ok=True)
 output_file_complete = "../csv/add_category/device_with_category.csv"
 output_file_partial = "../csv/add_category/device_with_category_partial.csv"
 
-# "device_with_category_partial.csv"の存否により処理を分岐
+# output_file_partialの存否により処理を分岐
 if os.path.exists(output_file_partial):
     print(f"Loading partial data from {output_file_partial}")
     df = pd.read_csv(output_file_partial, dtype={'user': str})

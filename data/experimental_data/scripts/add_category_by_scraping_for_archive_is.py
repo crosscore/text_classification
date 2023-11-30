@@ -1,4 +1,4 @@
-#add_category_by_scraping.py
+#add_category_by_scraping_for_archive_is.py
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
@@ -26,106 +26,121 @@ def sanitize_filename(url):
 def file_exists(file_path):
     return os.path.exists(file_path)
 
-def parse_html_for_category(html_content):
+def parse_html_for_category(html_content, archive_url):
     print("--- parse_html_for_category ---")
     soup = BeautifulSoup(html_content, 'html.parser')
-    scripts = soup.find_all('script')
-    category_found = False
-    for script in scripts:
-        if 'currentCategory' in script.text:
-            print('Discover currentCategory.')
-            match = re.search(r'"currentCategory":"(\w+)"', script.text)
-            if match:
-                print(f'match.group(1): {match.group(1)}')
-                category_key = match.group(1)
-                if category_key in category_dict:
-                    print(f'category_key: {category_key}')
-                    headline_match = re.search(r'"headline":"([^"]+)"', script.text)
-                    if headline_match:
-                        title = headline_match.group(1)
-                        print(f'headline_match.group(1): {title}')
-                    else:
-                        title = 'None'
-                    category_found = True
-                    return category_dict[category_key]
-                else:
-                    print(f"category_dictに存在しないkey({category_key})です。")
-            continue
-        elif 'id_type' in script.text:
-            category_info = re.search(r'"id_type":"(\w+)"', script.text)
-            if category_info:
-                category_key = category_info.group(1)
-                if category_key in category_dict:
-                    category_found = True
-                    return category_dict[category_key]
-            continue
-    if not category_found:
-        metatags = soup.find_all('meta')
-        for meta in metatags:
-            if 'name' in meta.attrs and meta.attrs['name'] == 'description':
-                content = meta.attrs.get('content', '').lower()  # 小文字に変換
-                if 'スポーツ' in content:  # 'スポーツ'が含まれているかチェック
-                    print("Discover categories among meta tags: return 'スポーツ'")
-                    return 'スポーツ'
-        print("######### Category not found in HTML content. #########")
-        return "category_not_found"
+    converted_archive_url = archive_url.replace('https://archive.is/', 'https://archive.is/o/')
+    # 変換したarchive_urlに基づいて適切なリンクを探す
+    archive_url_pattern = re.compile(re.escape(converted_archive_url) + r'/https://news\.yahoo\.co\.jp/categories/(\w+)')
+    print(archive_url_pattern)
+    for link in soup.find_all('a', href=archive_url_pattern):
+        match = archive_url_pattern.search(link['href'])
+        if match:
+            print(f"match.group(1) found: {match.group(1)}")
+            category_key = match.group(1)
+            if category_key in category_dict:
+                print(f"Category found: {category_dict[category_key]}")
+                return category_dict[category_key]
+    print("Category not found in HTML content.")
+    return "category_not_found"
 
-def get_url_from_archiveis(original_url):
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+
+def get_url_from_archiveis_selenium(original_url):
+    options = Options()
+    options.headless = True
+    options.add_argument('--disable-gpu')
+    options.add_argument('--no-sandbox')
+    # Chrome WebDriverを自動でダウンロード
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
     try:
-        response = requests.get(original_url, timeout=18)
-        response.raise_for_status()
-        if '結果はありません' in response.text:
-            print("No results found for this URL. Skipping...")
-            return None
-        else:
-            soup = BeautifulSoup(response.text, 'html.parser')
-            link = soup.find('a', href=True)
-            print(f"link found: {link}")
-            if link:
+        driver.get(original_url)
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        driver.quit()
+        pattern = re.compile(r'https://archive\.is/\w{5}$')
+        links = soup.find_all('a', href=pattern)
+        for link in links:
+            if link['href'] != original_url:
+                print(f"link found: {link['href']}")
                 return link['href']
-            else:
-                print("No valid archive link found. Skipping...")
-                return None
-    except requests.exceptions.RequestException as e:
+        #patternの中に'結果はありません'という文字列が存在するかを確認
+        if soup.find(string='結果はありません'):
+            print("find '結果はありません' in pattern.")
+            return None
+        print("###### Failed to detect 'url' in 'get_url_from_archiveis_selenium()' ######")
+        return None
+    except Exception as e:
         print(f"Error with URL {original_url}: {e}")
+        driver.quit()
         return None
 
+session = requests.Session()
+session.headers.update({
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+})
+
+def get_url_from_saved_html(file_path):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        html_content = f.read()
+    soup = BeautifulSoup(html_content, 'html.parser')
+    pattern = re.compile(r'https://archive\.is/\w{5}$')
+    links = soup.find_all('a', href=pattern)
+    for link in links:
+        if link['href'].startswith('https://archive.is/'):
+            return link['href']
+    print("No valid archive URL found in saved file.")
+    return None
+
 def get_category_from_archive(url, max_retries=3, wait_seconds=12, max_wait_seconds=60):
-    time.sleep(9)
-    print(f"--------------- Analyzing {url} ---------------")
-    #現在の時刻をprint
+    time.sleep(3)
+    print(f"\n--------------- Analyzing {url} ---------------")
     now = time.time()
     print(f"Current time: {now}")
     retries = 0
     html_dir = '../html/archive_files/'
     file_name = sanitize_filename(url)
     file_path = f'{html_dir}{file_name}'
-    print(file_path)
     html_content = ''
     if file_exists(file_path):
         print(f'File already exists: {file_path}')
         with open(file_path, 'r', encoding='utf-8') as f:
             html_content = f.read()
+        # 保存されたHTMLファイルからarchive_urlを取得
+        archive_url = get_url_from_saved_html(file_path)
+        print(f"archive_url: {archive_url}")
+        if not archive_url:
+            print("No archive_url found in saved file. Skipping...")
+            return "processing_skipped"
     else:
+        print(f'File does not exist: {file_path}')
+        # Seleniumを使用してarchive.isのページを取得し、HTMLを保存する)
         while retries < max_retries:
             try:
-                # archive.isを使用する場合
-                archive_url = get_url_from_archiveis(url)
+                original_url = 'https://archive.is/' + url
+                print(f'original_url: {original_url}')
+                archive_url = get_url_from_archiveis_selenium(original_url)
+                print(f"archive_url: {archive_url}")
                 if not archive_url:
+                    print("No archive_url found. Skipping...")
                     return "processing_skipped"
-                #web.archive.orgを使用する場合
-                #archive_url = f'https://web.archive.org/web/{url}' 
-                print(f"Trying requests.get({archive_url})")
-                response = requests.get(archive_url, timeout=18)
-                response.raise_for_status()
-                print("Request successful. Status code: 200")
+                # Seleniumを使用してページのHTMLを取得
+                options = Options()
+                options.headless = True
+                service = Service(ChromeDriverManager().install())
+                driver = webdriver.Chrome(service=service, options=options)
+                driver.get(archive_url)
+                html_content = driver.page_source
+                driver.quit()
                 # 200ステータスコードの場合のみHTMLを保存
                 os.makedirs(html_dir, exist_ok=True)
                 with open(file_path, 'w', encoding='utf-8') as f:
                     print(f'open: {file_path}')
-                    f.write(response.text)
+                    f.write(html_content)
                 print(f'Saved HTML file: {file_name}')
-                html_content = response.text
                 break
             except requests.exceptions.Timeout as e:
                 print(f"Timeout with URL {url}: {e}")
@@ -158,19 +173,22 @@ def get_category_from_archive(url, max_retries=3, wait_seconds=12, max_wait_seco
                 retries += 1
                 print(f"Retrying... ({retries}/{max_retries})")
                 time.sleep(wait_seconds)
-                wait_seconds = min(wait_seconds * 2, max_wait_seconds)  # 待機時間を倍にして、最大値に制限を設ける
+                wait_seconds = min(wait_seconds * 2, max_wait_seconds)
     # HTMLの内容を解析してカテゴリを見つける
     if html_content:
-        return parse_html_for_category(html_content)
+        return parse_html_for_category(html_content, archive_url)
     print("Retry_limit_exceeded.")
     return "retry_limit_exceeded"
 
 def listen_for_exit_command():
     global exit_command_issued
     global exit_thread
+    print("Exit listener thread started.")
     while not exit_thread:
+        print("Waiting for the exit command...")
         input("Press Enter to stop the process... ")
         exit_command_issued = True
+        print("Exit command issued.")
         break
 
 
@@ -180,18 +198,21 @@ exit_thread = False
 
 output_dir = "../csv/add_category"
 os.makedirs(output_dir, exist_ok=True)
-output_file_complete = "../csv/add_category/device_with_category.csv"
-output_file_partial = "../csv/add_category/device_with_category_partial.csv"
+output_file_complete = "../csv/add_category/fix_404_not_found_v1.csv"
+output_file_partial = "../csv/add_category/fix_404_not_found_v1_partial.csv"
 
-# "device_with_category_partial.csv"の存否により処理を分岐
+# output_file_partialの存否により処理を分岐
 if os.path.exists(output_file_partial):
     print(f"Loading partial data from {output_file_partial}")
     df = pd.read_csv(output_file_partial, dtype={'user': str})
 else:
     print("Loading original data")
-    df = pd.read_csv('../csv/original/device_original.csv', dtype={'user': str})
+    df = pd.read_csv('../csv/original/404_not_found.csv', dtype={'user': str})
     # 'category' 列が存在しない場合は、空の列を作成
     if 'category' not in df.columns:
+        df['category'] = None
+    # 'category' 列が存在する場合は、一時的に全ての値を空に設定
+    if 'category' in df.columns:
         df['category'] = None
 
 exit_command_issued = False
@@ -208,8 +229,8 @@ for index, row in df.iterrows():
         print("Exit command issued. Saving partial data...")
         # 全行にカテゴリを割り当てるまで、現在のcategoriesの長さをチェック
         while len(categories) < len(df):
-            categories.append(None) #未割り当ての行にはNoneを追加
-        df['category'] = categories  # 現在までの結果を保存
+            categories.append(None)
+        df['category'] = categories
         df.to_csv(output_file_partial, index=False)
         print(f"{output_file_partial} was saved: ")
         exit_command_detected = True
@@ -222,12 +243,10 @@ for index, row in df.iterrows():
     category = get_category_from_archive(row['url'])
     if category in ["retry_limit_exceeded", "request_exception", "category_not_found"]:
         print("Error occurred. URL will be reprocessed later.")
-        categories.append(None)  # エラー時はNoneを追加
+        categories.append(None)
         error_urls.append((row['url'], row['title']))
         continue
-    # 取得したカテゴリをリストに追加
     categories.append(category)
-# 'category' 列を更新（もしくは追加）
 df['category'] = categories
 
 # 処理が完了した場合、完全なデータとエラーURLのデータを保存

@@ -1,6 +1,6 @@
 import pandas as pd
 
-csv_file = '../../csv/add_category/device_with_category.csv'
+csv_file = '../csv/add_category/device_with_category.csv'
 
 df = pd.read_csv(csv_file, encoding='utf-8')
 

@@ -21,5 +21,4 @@ print(f"df['category'].value_counts(dropna=False):\n{df['category'].value_counts
 print('---------')
 print(f"df['category'].isnull().sum():\n{df['category'].isnull().sum()}")
 print('---------')
-#'url'が重複しているか確認
 print(f"df['url'].duplicated().sum():\n{df['url'].duplicated().sum()}")

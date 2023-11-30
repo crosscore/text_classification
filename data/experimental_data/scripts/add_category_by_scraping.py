@@ -73,6 +73,9 @@ def parse_html_for_category(html_content):
 def get_category_from_archive(url, max_retries=3, wait_seconds=12, max_wait_seconds=60):
     time.sleep(9)
     print(f"--------------- Analyzing {url} ---------------")
+    #現在の時刻をprint
+    now = time.time()
+    print(f"Current time: {now}")
     retries = 0
     html_dir = '../html/archive_files/'
     file_name = sanitize_filename(url)

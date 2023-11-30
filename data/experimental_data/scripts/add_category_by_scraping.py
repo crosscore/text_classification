@@ -212,8 +212,6 @@ if not exit_command_detected:
     else:
         print("All data processed successfully. Saving data...")
         df.to_csv(output_file_complete, index=False)
-
-# error_urlsが空でなければ、それをCSVファイルとして保存
 if error_urls:
     error_df = pd.DataFrame(error_urls, columns=['url', 'title'])
     error_output_file = "../csv/add_category/error_urls.csv"

@@ -1,12 +1,8 @@
 import pandas as pd
-import glob
-import re
 
-file_list = glob.glob('../../csv/yahoo_news/concat/*_v*.csv')
-# バージョン番号に基づいて最新のファイルを選択
-latest_file = max(file_list, key=lambda x: int(re.search(r'_v(\d+).csv', x).group(1)))
-print(latest_file)
-df = pd.read_csv(latest_file, encoding='utf-8')
+csv_file = '../../csv/add_category/device_with_category.csv'
+
+df = pd.read_csv(csv_file, encoding='utf-8')
 
 print('---------')
 print(f'df.isnull().sum():\n{df.isnull().sum()}')

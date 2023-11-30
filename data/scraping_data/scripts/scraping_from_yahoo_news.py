@@ -9,22 +9,29 @@ import re
 
 today_date = datetime.datetime.now().strftime('%Y%m%d')
 concat_dir = '../csv/yahoo_news/concat/'
+skip_urls = set()
 
 if os.path.exists(concat_dir) and os.listdir(concat_dir):
     files = os.listdir(concat_dir)
-    pattern = re.compile(rf'{today_date}_v(\d+)\.csv$')
+    pattern = re.compile(rf'yahoo_news_concat_{today_date}_v(\d+)\.csv$')
     latest_version = 0
+    latest_file = ''
     for file in files:
         match = pattern.search(file)
         if match:
             version = int(match.group(1))
             if version > latest_version:
                 latest_version = version
+                latest_file = file
     next_version = latest_version + 1
     output_file = f'../csv/yahoo_news/daily/yahoo_news_articles_{today_date}_v{next_version}.csv'
+    if latest_file:
+        latest_df = pd.read_csv(os.path.join(concat_dir, latest_file))
+        skip_urls = set(latest_df['url'].dropna().unique())
 else:
     print("First scraping today or directory does not exist or is empty.")
     output_file = f'../csv/yahoo_news/daily/yahoo_news_articles_{today_date}_v1.csv'
+
 print(output_file)
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
@@ -43,10 +50,12 @@ categories = {
 urls = {category: f'{base_url}{categories[category]}.xml' for category in categories}
 
 skipped_articles = 0
+new_articles_count = 0
 MAX_RETRIES = 6
 RETRY_INTERVAL = 12 # seconds
 
 def scrape_news(category, url):
+    global new_articles_count
     for i in range(MAX_RETRIES):
         try:
             print(f'scrape_news... {category}: {url}')
@@ -60,11 +69,14 @@ def scrape_news(category, url):
             for item in soup.find_all("item"):
                 title = item.find("title").get_text(strip=True)
                 link_tag = item.find("link")
-                link = link_tag.next_sibling.strip() if link_tag else ""  # <link> タグの次のテキストノードを取得
+                link = link_tag.next_sibling.strip() if link_tag else ""
+                if link in skip_urls:
+                    print(f"Skipping {link} as it's already scraped.")
+                    continue
+                new_articles_count += 1
                 print(f"{category}: {title}")
                 print(f"{link}")
                 articles.append((category, title, link))
-            time.sleep(1)
             return articles
         except:
             print(f"Failed, retrying in {RETRY_INTERVAL} seconds...")
@@ -76,7 +88,7 @@ def scrape_article_content(link,  MAX_RETRIES = 6):
     attempts = 0
     while attempts < MAX_RETRIES:
         try:
-            print(f"scrape_article_content... url: {link}")
+            print(f"{link}")
             response = requests.get(link, timeout=(12, 18))
             soup = BeautifulSoup(response.content, 'html.parser')
             paragraph = soup.find('p', class_=lambda x: x and 'highLightSearchTarget' in x)
@@ -102,20 +114,22 @@ for category, url in urls.items():
         break
     print(f'Found {len(articles)} articles.')
     all_articles.extend(articles)
+    time.sleep(1)
 print(f'Complete. Found {len(all_articles)} articles.')
 
 all_articles_data = []
 for article in all_articles:
     category, title, link = article
-    print(f'Scraping ({category}) {title} ...')
+    print(f'{category} {title} ...')
     content = scrape_article_content(link)
     print(f'Found {len(content)} characters.')
     all_articles_data.append([category, title, link, content])
     time.sleep(0.9)
 df = pd.DataFrame(all_articles_data, columns=['category', 'title', 'url', 'content'])
+print(f"df['url'].duplicated().sum(): {df['url'].duplicated().sum()}")
 df.to_csv(output_file, index=False, encoding='utf-8')
-
 print('End scraping.')
+print(f'Number of new articles scraped: {new_articles_count}')
 print(f'Number of skipped articles: {skipped_articles}')
 end = time.time()
 print(f'Time elapsed: {end - start} seconds.')

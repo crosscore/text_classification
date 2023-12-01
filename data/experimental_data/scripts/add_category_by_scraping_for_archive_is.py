@@ -210,8 +210,8 @@ exit_thread = False
 
 output_dir = "../csv/add_category"
 os.makedirs(output_dir, exist_ok=True)
-output_file_complete = "../csv/add_category/404_not_found_v2.csv"
-output_file_partial = "../csv/add_category/404_not_found_v2_partial.csv"
+output_file_complete = "../csv/add_category/device_with_category_v2.csv"
+output_file_partial = "../csv/add_category/device_with_category_v2_partial.csv"
 
 # output_file_partialの存否により処理を分岐
 if os.path.exists(output_file_partial):
@@ -219,13 +219,8 @@ if os.path.exists(output_file_partial):
     df = pd.read_csv(output_file_partial, dtype={'user': str})
 else:
     print("Loading original data")
-    df = pd.read_csv('../csv/original/404_not_found.csv', dtype={'user': str})
-    # 'category' 列が存在しない場合は、空の列を作成
-    if 'category' not in df.columns:
-        df['category'] = None
-    # 'category' 列が存在する場合は、一時的に全ての値を空に設定
-    if 'category' in df.columns:
-        df['category'] = None
+    df = pd.read_csv('../csv/original/all_404_not_found.csv', dtype={'user': str})
+    df['category'] = None
 
 exit_command_issued = False
 exit_listener = threading.Thread(target=listen_for_exit_command)

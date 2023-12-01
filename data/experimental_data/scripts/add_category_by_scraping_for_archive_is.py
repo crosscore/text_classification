@@ -29,20 +29,32 @@ def file_exists(file_path):
 def parse_html_for_category(html_content, archive_url):
     print("--- parse_html_for_category ---")
     soup = BeautifulSoup(html_content, 'html.parser')
-    converted_archive_url = archive_url.replace('https://archive.is/', 'https://archive.is/o/')
-    # 変換したarchive_urlに基づいて適切なリンクを探す
-    archive_url_pattern = re.compile(re.escape(converted_archive_url) + r'/https://news\.yahoo\.co\.jp/categories/(\w+)')
-    print(archive_url_pattern)
-    for link in soup.find_all('a', href=archive_url_pattern):
-        match = archive_url_pattern.search(link['href'])
-        if match:
-            print(f"match.group(1) found: {match.group(1)}")
-            category_key = match.group(1)
-            if category_key in category_dict:
-                print(f"Category found: {category_dict[category_key]}")
-                return category_dict[category_key]
+
+    url_patterns = [
+        re.compile(re.escape(archive_url) + r'/https://news\.yahoo\.co\.jp/categories/(\w+)'),
+        re.compile(re.escape(archive_url.replace('https://archive.is/', 'https://archive.is/o/')) + r'/https://news\.yahoo\.co\.jp/ranking/access/news/(\w+)')
+    ]
+    for pattern in url_patterns:
+        for link in soup.find_all('a', href=pattern):
+            match = pattern.search(link['href'])
+            if match:
+                print(f"Matched pattern: {pattern}.")
+                category_key = match.group(1)
+                if category_key in category_dict:
+                    print(f"Category found in link: {category_dict[category_key]}")
+                    return category_dict[category_key]
+
+    pattern = re.compile(r'アクセスランキング\（([^）]+)）')
+    match = pattern.search(html_content)
+    if match:
+        print(f"Matched 'アクセスランキング' pattern.")
+        category = match.group(1)
+        print(f"Access ranking category found: {category}")
+        return category
+
     print("Category not found in HTML content.")
     return "category_not_found"
+
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -198,8 +210,8 @@ exit_thread = False
 
 output_dir = "../csv/add_category"
 os.makedirs(output_dir, exist_ok=True)
-output_file_complete = "../csv/add_category/fix_404_not_found_v1.csv"
-output_file_partial = "../csv/add_category/fix_404_not_found_v1_partial.csv"
+output_file_complete = "../csv/add_category/404_not_found_v2.csv"
+output_file_partial = "../csv/add_category/404_not_found_v2_partial.csv"
 
 # output_file_partialの存否により処理を分岐
 if os.path.exists(output_file_partial):
@@ -254,15 +266,15 @@ if not exit_command_detected:
     if retry_limit_exceeded:
         df.to_csv(output_file_partial, index=False)
     else:
-        print("All data processed successfully. Saving data...")
         df.to_csv(output_file_complete, index=False)
-if error_urls:
-    error_df = pd.DataFrame(error_urls, columns=['url', 'title'])
-    error_output_file = "../csv/add_category/error_urls.csv"
-    error_df.to_csv(error_output_file, index=False)
-    print(f"Error URLs saved to {error_output_file}")
+        print("All data processed successfully. Saving data...")
+    if error_urls:
+        error_df = pd.DataFrame(error_urls, columns=['url', 'title'])
+        error_output_file = "../csv/add_category/error_urls.csv"
+        error_df.to_csv(error_output_file, index=False)
+        print(f"Error URLs saved to {error_output_file}")
+    exit_thread = True
 
-exit_thread = True
 exit_listener.join()
 end = time.time()
 print(f"Elapsed time: {end - start} seconds.")

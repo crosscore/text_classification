@@ -12,6 +12,8 @@ import os
 import torch
 
 def clean_text_for_bert(text):
+    if isinstance(text, float):
+        text = str(text)
     text = text.strip()
     return text
 
@@ -62,8 +64,9 @@ def livedoor_news_to_df(root_dir):
 start = time.time()
 # livedoor_news_dir = '../../../../livedoor_news/text'
 # df = livedoor_news_to_df(livedoor_news_dir)
-df = pd.read_csv('../../../data/scraping_data/csv/yahoo_news/concat/yahoo_news_concat_1126_v4.csv')
+df = pd.read_csv('../../../data/scraping_data/csv/yahoo_news/concat/yahoo_news_concat_20231201_v1.csv')
 df['text'] = df['title'] + '。' + df['content']
+print(df['text'])
 df['text'] = df['text'].apply(clean_text_for_bert)
 print(df)
 print(df['text'])

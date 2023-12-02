@@ -71,9 +71,6 @@ df_concat.drop_duplicates(subset=['title'], inplace=True)
 print(f"after : {df_concat['url'].nunique()}")
 #dfの'title'または'content'がnanの場合、その行を削除
 df_concat = df_concat.dropna(subset=['title', 'content'])
-print("df_concat.dropna(subset=['title, 'content'])")
-
-
 df_concat.to_csv(output_file, index=False)
 df = df_concat.copy()
 print('---------')

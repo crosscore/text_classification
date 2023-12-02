@@ -41,7 +41,11 @@ read_file = glob.glob('../../../data/scraping_data/csv/yahoo_news/concat/*.csv')
 df = pd.read_csv(read_file[0])
 df['text'] = df['title'] + '。' + df['content']
 df['text'] = df['text'].apply(clean_text)
-print(df)
+#df['url']に'/pickup/'が含まれる行を削除
+df = df[~df['url'].str.contains('/pickup/')]
+#df['url']に'/pickup/'が含まれる行数を出力
+print(f"'/pickup/'の含まれる行数: {df[df['url'].str.contains('/pickup/')]}")
+print(df['category'].value_counts(dropna=False))
 print(df['text'])
 
 le = LabelEncoder()

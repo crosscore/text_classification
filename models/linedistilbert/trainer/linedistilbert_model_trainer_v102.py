@@ -44,7 +44,7 @@ df['text'] = df['text'].apply(clean_text)
 #df['url']に'/pickup/'が含まれる行を削除
 df = df[~df['url'].str.contains('/pickup/')]
 #df['url']に'/pickup/'が含まれる行数を出力
-print(f"'/pickup/'の含まれる行数: {df[df['url'].str.contains('/pickup/')]}")
+print(f"'url'列に'/pickup/'の含まれる行数: {df[df['url'].str.contains('/pickup/')]}")
 print(df['category'].value_counts(dropna=False))
 print(df['text'])
 

@@ -71,7 +71,7 @@ def scrape_news(category, url):
             print(f'scrape_news... {category}: {url}')
             response = requests.get(url, timeout=(12, 18))
             print(f'response.status_code: {response.status_code}')
-            # XML パーサーを使用するように変更
+            # XMLパーサーを使用するように変更
             soup = BeautifulSoup(response.content, 'xml')
             if "指定されたURLは存在しませんでした。" in str(soup):
                 print(f"Error page detected, skipping remaining page for ({category}) url:{url}")
@@ -136,7 +136,7 @@ for category, url in topic_urls.items():
         all_articles.extend(articles)
     time.sleep(1)
 
-print(f'Complete. Found {len(all_articles)} articles.')
+print(f'------ Complete. Found {len(all_articles)} articles. ------')
 
 all_articles_data = []
 for article in all_articles:

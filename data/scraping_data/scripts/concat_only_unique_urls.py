@@ -64,13 +64,15 @@ print(f'before: {df_original["url"].nunique()}')
 # 本日のデータの読み込み
 df_new = pd.read_csv(input_new)
 df_concat = pd.concat([df_original, df_new])
-# 'url'列の値が重複する場合削除
+# 'url','content'列の値が重複する場合削除
 df_concat.drop_duplicates(subset=['url'], inplace=True)
+df_concat.drop_duplicates(subset=['content'], inplace=True)
+df_concat.drop_duplicates(subset=['title'], inplace=True)
 print(f"after : {df_concat['url'].nunique()}")
-print(df_concat['category'].value_counts(dropna=False))
 #dfの'title'または'content'がnanの場合、その行を削除
 df_concat = df_concat.dropna(subset=['title', 'content'])
 print("df_concat.dropna(subset=['title, 'content'])")
+
 
 df_concat.to_csv(output_file, index=False)
 df = df_concat.copy()
@@ -87,4 +89,5 @@ print(f"df['category'].value_counts(dropna=False):\n{df['category'].value_counts
 print('---------')
 print(f"df['category'].isnull().sum(): \n{df['category'].isnull().sum()}")
 print('---------')
-print(f"df[df['category'].isnull()]:\n{df[df['category'].isnull()]}")
+for column in df.columns:
+    print(f"df['{column}].duplicated().sum(): {df[column].duplicated().sum()}")

@@ -145,7 +145,7 @@ for article in all_articles:
     content = scrape_article_content(link)
     print(f'Found {len(content)} characters.')
     all_articles_data.append([category, title, link, content])
-    time.sleep(0.9)
+    time.sleep(0.6)
 
 df = pd.DataFrame(all_articles_data, columns=['category', 'title', 'url', 'content'])
 print(f"df['url'].duplicated().sum(): {df['url'].duplicated().sum()}")

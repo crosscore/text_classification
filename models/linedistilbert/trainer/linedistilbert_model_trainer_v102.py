@@ -4,7 +4,8 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.preprocessing import LabelEncoder
-from transformers import BertJapaneseTokenizer, DistilBertForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback
+#from transformers import BertJapaneseTokenizer, DistilBertForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback
 from datasets import Dataset
 import re
 import time
@@ -43,7 +44,6 @@ df['text'] = df['title'] + '。' + df['content']
 df['text'] = df['text'].apply(clean_text)
 #df['url']に'/pickup/'が含まれる行を削除
 df = df[~df['url'].str.contains('/pickup/')]
-#df['url']に'/pickup/'が含まれる行数を出力
 print(f"'url'列に'/pickup/'の含まれる行数: {df[df['url'].str.contains('/pickup/')]}")
 print(df['category'].value_counts(dropna=False))
 print(df['text'])
@@ -57,7 +57,8 @@ train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
 train_dataset = Dataset.from_dict({'text': train_df['text'].tolist(), 'label': train_df['label'].tolist()})
 test_dataset = Dataset.from_dict({'text': test_df['text'].tolist(), 'label': test_df['label'].tolist()})
 PRE_TRAINED = 'line-corporation/line-distilbert-base-japanese'
-tokenizer = BertJapaneseTokenizer.from_pretrained(PRE_TRAINED)
+#tokenizer = BertJapaneseTokenizer.from_pretrained(PRE_TRAINED)
+tokenizer = AutoTokenizer.from_pretrained(PRE_TRAINED, trust_remote_code=True)
 
 def tokenize_function(examples):
     tokenized_inputs =tokenizer(examples['text'], padding=True, truncation=True, max_length=512)
@@ -68,7 +69,11 @@ tokenized_train_dataset = train_dataset.map(tokenize_function, batched=True)
 tokenized_test_dataset = test_dataset.map(tokenize_function, batched=True)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = DistilBertForSequenceClassification.from_pretrained(PRE_TRAINED, num_labels=len(le.classes_)).to(device)
+#model = DistilBertForSequenceClassification.from_pretrained(PRE_TRAINED, num_labels=len(le.classes_)).to(device)
+model = AutoModelForSequenceClassification.from_pretrained(PRE_TRAINED, num_labels=len(le.classes_)).to(device)
+
+print(f"Class of tokenizer used: {tokenizer.__class__.__name__}")
+print(f"Class of model used: {model.__class__.__name__}")
 
 training_args = TrainingArguments(
     output_dir='./result',
@@ -95,11 +100,11 @@ trainer = Trainer(
     eval_dataset=tokenized_test_dataset,
     tokenizer=tokenizer,
     compute_metrics=compute_metrics,
-    callbacks=[EarlyStoppingCallback(early_stopping_patience=1)]
+    callbacks=[EarlyStoppingCallback(early_stopping_patience=2)]
 )
 
 trainer.train()
-output_dir = '../versions/v101/'
+output_dir = '../versions/v102/'
 os.makedirs(output_dir, exist_ok=True)
 trainer.save_model(output_dir)
 print('The model has been saved.')

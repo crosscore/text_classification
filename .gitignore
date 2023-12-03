@@ -6,6 +6,9 @@ data/scraping_data/csv/yahoo_news/warehouse/
 data/scraping_data/csv/yahoo_news/daily/
 models/linedistilbert/trainer/result/
 models/linedistilbert/versions/
-models/linedistilbert/utils/result
+models/linedistilbert/utils/reuslt
+models/luke_japanese/trainer/result
+models/luke_japanese/versions/
+models/luke_japanese/utils/result
 data/experimental_data/csv/
 data/experimental_data/html/

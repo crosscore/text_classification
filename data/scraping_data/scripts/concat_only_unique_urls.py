@@ -4,6 +4,8 @@ import datetime
 import re
 import time
 
+category_list = ['国内', '国際', '経済', 'エンタメ', 'スポーツ', 'IT', '科学', 'ライフ', '地域']
+
 # 今日の日付と前日の日付を取得
 today_date = datetime.datetime.now().strftime('%Y%m%d')
 yesterday_date = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y%m%d')
@@ -71,6 +73,10 @@ df_concat.drop_duplicates(subset=['title'], inplace=True)
 print(f"after : {df_concat['url'].nunique()}")
 #dfの'title'または'content'がnanの場合、その行を削除
 df_concat = df_concat.dropna(subset=['title', 'content'])
+# 'category'列をcategory_listの順番に基づいてソート
+df_concat['category'] = pd.Categorical(df_concat['category'], categories=category_list, ordered=True)
+df_concat.sort_values(by='category', inplace=True)
+
 df_concat.to_csv(output_file, index=False)
 df = df_concat.copy()
 print('---------')

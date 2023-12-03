@@ -126,7 +126,7 @@ for category, url in category_urls.items():
     if articles:
         print(f'Found {len(articles)} articles.')
         all_articles.extend(articles)
-    time.sleep(0.5)
+    time.sleep(0.25)
 
 for category, url in topic_urls.items():
     print(f'{category}: {url}')
@@ -134,7 +134,7 @@ for category, url in topic_urls.items():
     if articles:
         print(f'Found {len(articles)} articles.')
         all_articles.extend(articles)
-    time.sleep(0.5)
+    time.sleep(0.25)
 
 print(f'------ Complete. Found {len(all_articles)} articles. ------')
 

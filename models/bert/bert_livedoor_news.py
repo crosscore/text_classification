@@ -10,7 +10,6 @@ import time
 import os
 
 def clean_text_for_bert(text):
-    # 連続するスペース、タブ、改行をスペースに置換
     #text = re.sub(r'\s+', ' ', text)
     text = text.strip()
     return text

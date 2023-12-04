@@ -6,7 +6,8 @@ df2 = pd.read_csv('../csv/add_category/device_with_category_v2.csv', dtype={'use
 # 'url'をインデックスに設定
 df1 = df1.set_index('url')
 df2 = df2.set_index('url')
-
+print(df1.head())
+print(df2.head())
 df1['category'] = df2['category']
 df1 = df1.reset_index()
     

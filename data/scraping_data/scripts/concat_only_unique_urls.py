@@ -78,7 +78,7 @@ df_concat['category'] = pd.Categorical(df_concat['category'], categories=categor
 df_concat.sort_values(by='category', inplace=True)
 
 df_concat.to_csv(output_file, index=False)
-df = df_concat.copy()
+df = df_concat.copy()[~df_concat['url'].str.contains('/pickup/')]
 print('---------')
 print(f'df.isnull().sum():\n{df.isnull().sum()}')
 print('---------')
@@ -91,4 +91,4 @@ print('---------')
 print(f"df['category'].value_counts(dropna=False):\n{df['category'].value_counts(dropna=False)}")
 print('---------')
 for column in df.columns:
-    print(f"df['{column}].duplicated().sum(): {df[column].duplicated().sum()}")
+    print(f"df['{column}'].duplicated().sum(): {df[column].duplicated().sum()}")

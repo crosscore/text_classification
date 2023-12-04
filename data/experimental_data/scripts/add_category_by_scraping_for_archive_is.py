@@ -126,7 +126,7 @@ def get_category_from_archive(url, max_retries=3, wait_seconds=12, max_wait_seco
         print(f"archive_url: {archive_url}")
         if not archive_url:
             print("No archive_url found in saved file. Skipping...")
-            return "processing_skipped"
+            return "404_not_found"
     else:
         print(f'File does not exist: {file_path}')
         # Seleniumを使用してarchive.isのページを取得し、HTMLを保存する)
@@ -138,7 +138,7 @@ def get_category_from_archive(url, max_retries=3, wait_seconds=12, max_wait_seco
                 print(f"archive_url: {archive_url}")
                 if not archive_url:
                     print("No archive_url found. Skipping...")
-                    return "processing_skipped"
+                    return "404_not_found"
                 # Seleniumを使用してページのHTMLを取得
                 options = Options()
                 options.headless = True

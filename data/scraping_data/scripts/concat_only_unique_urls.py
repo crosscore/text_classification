@@ -90,7 +90,5 @@ print(f"df['category'].unique():\n{df['category'].unique()}")
 print('---------')
 print(f"df['category'].value_counts(dropna=False):\n{df['category'].value_counts(dropna=False)}")
 print('---------')
-print(f"df['category'].isnull().sum(): \n{df['category'].isnull().sum()}")
-print('---------')
 for column in df.columns:
     print(f"df['{column}].duplicated().sum(): {df[column].duplicated().sum()}")

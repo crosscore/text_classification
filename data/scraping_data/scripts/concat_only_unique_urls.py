@@ -1,21 +1,19 @@
+#concat_only_unique_urls.py
 import pandas as pd
 import os
 import datetime
 import re
-import time
 
 category_list = ['国内', '国際', '経済', 'エンタメ', 'スポーツ', 'IT', '科学', 'ライフ', '地域']
 
-# 今日の日付と前日の日付を取得
-today_date = datetime.datetime.now().strftime('%Y%m%d')
-yesterday_date = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y%m%d')
-# ディレクトリ内のファイル名を取得
+now = datetime.datetime.now()
+today_date = now.strftime('%Y%m%d')
+yesterday_date = (now - datetime.timedelta(days=1)).strftime('%Y%m%d')
+
 files = os.listdir('../csv/yahoo_news/concat/')
-# ファイル名から日付とバージョンを抽出するための正規表現
 pattern_yesterday = re.compile(rf'{yesterday_date}_v(\d+)\.csv$')
 pattern_today = re.compile(rf'{today_date}_v(\d+)\.csv$')
 
-# 前日の最新のバージョンを探す
 latest_version_yesterday = 0
 latest_file_yesterday = ''
 latest_version_today = 0
@@ -32,52 +30,39 @@ for file in files:
         if version > latest_version_today:
             latest_version_today = version
 
-# 本日のファイルが存在するかチェックし、バージョンを設定
 if latest_version_today > 0:
     version = latest_version_today + 1
 else:
     version = 1
-# 本日のファイルが存在するかチェックし、バージョンを設定
-if latest_version_today > 0:
-    version = latest_version_today + 1
-    # 本日の2度目以降の実行の場合のファイル名設定
-    input_new = f'../csv/yahoo_news/daily/yahoo_news_articles_{today_date}_v{version}.csv'
-    output_file = f'../csv/yahoo_news/concat/yahoo_news_concat_{today_date}_v{version}.csv'
-    # 本日の2度目以降の実行の場合の前日のファイル名設定
-    input_old = f'../csv/yahoo_news/concat/yahoo_news_concat_{today_date}_v{latest_version_today}.csv'
-else:
-    # 本日初めての実行の場合のファイル名設定
-    input_new = f'../csv/yahoo_news/daily/yahoo_news_articles_{today_date}_v1.csv'
-    output_file = f'../csv/yahoo_news/concat/yahoo_news_concat_{today_date}_v1.csv'
-    # 本日初めての実行の場合の前日のファイル名設定
-    input_old = os.path.join('../csv/yahoo_news/concat/', latest_file_yesterday) if latest_file_yesterday else None
-print(f'input_old: {input_old}')
-print(f'input_new: {input_new}')
+
+new_file = f'../csv/yahoo_news/daily/yahoo_news_articles_{today_date}_v{version}.csv'
+output_file = f'../csv/yahoo_news/concat/yahoo_news_concat_{today_date}_v{version}.csv'
+original_file = f'../csv/yahoo_news/concat/yahoo_news_concat_{today_date}_v{latest_version_today}.csv' if latest_version_today > 0 else os.path.join('../csv/yahoo_news/concat/', latest_file_yesterday) if latest_file_yesterday else None
+
+print(f'input_old: {original_file}')
+print(f'input_new: {new_file}')
 print(f'output_file: {output_file}')
+
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
-# 前日のファイルが存在すれば読み込む、存在しなければ空のDataFrameを作成
-if input_old and os.path.exists(input_old):
-    df_original = pd.read_csv(input_old)
+if original_file and os.path.exists(original_file):
+    df_original = pd.read_csv(original_file)
 else:
     df_original = pd.DataFrame()
 print(f'before: {df_original["url"].nunique()}')
 
-# 本日のデータの読み込み
-df_new = pd.read_csv(input_new)
+df_new = pd.read_csv(new_file)
 df_concat = pd.concat([df_original, df_new])
-# 'url','content'列の値が重複する場合削除
-df_concat.drop_duplicates(subset=['url'], inplace=True)
-df_concat.drop_duplicates(subset=['content'], inplace=True)
-df_concat.drop_duplicates(subset=['title'], inplace=True)
+# 重複の削除
+df_concat.drop_duplicates(subset=['url', 'content', 'title'], inplace=True)
 print(f"after : {df_concat['url'].nunique()}")
-#dfの'title'または'content'がnanの場合、その行を削除
+
 df_concat = df_concat.dropna(subset=['title', 'content'])
-# 'category'列をcategory_listの順番に基づいてソート
 df_concat['category'] = pd.Categorical(df_concat['category'], categories=category_list, ordered=True)
 df_concat.sort_values(by='category', inplace=True)
-
 df_concat.to_csv(output_file, index=False)
+
+# データの確認
 df = df_concat.copy()[~df_concat['url'].str.contains('/pickup/')]
 print('---------')
 print(f'df.isnull().sum():\n{df.isnull().sum()}')

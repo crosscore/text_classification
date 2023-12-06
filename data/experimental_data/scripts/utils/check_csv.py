@@ -1,7 +1,7 @@
 import pandas as pd
 import glob
 
-csv_files = glob.glob('../../csv/add_category/device_with_category_v3.csv')
+csv_files = glob.glob('../../csv/complete/all_user_plus_category.csv')
 #csv_files = glob.glob('../csv/original/all_404_not_found_v3.csv')
 print(f'csv_files: {csv_files}')
 df = pd.read_csv(csv_files[0], encoding='utf-8')

@@ -51,6 +51,8 @@ if original_file and os.path.exists(original_file):
 else:
     df_original = pd.DataFrame()
 
+print(f"befor : {df_original['url'].nunique()}")
+
 # 新規ファイルの読み込み
 df_new = pd.read_csv(new_file)
 # 個別の重複削除（url, title, content）

@@ -38,29 +38,44 @@ else:
 new_file = f'../csv/yahoo_news/daily/yahoo_news_articles_{today_date}_v{version}.csv'
 output_file = f'../csv/yahoo_news/concat/yahoo_news_concat_{today_date}_v{version}.csv'
 original_file = f'../csv/yahoo_news/concat/yahoo_news_concat_{today_date}_v{latest_version_today}.csv' if latest_version_today > 0 else os.path.join('../csv/yahoo_news/concat/', latest_file_yesterday) if latest_file_yesterday else None
+os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
 print(f'input_old: {original_file}')
 print(f'input_new: {new_file}')
 print(f'output_file: {output_file}')
 
-os.makedirs(os.path.dirname(output_file), exist_ok=True)
-
 if original_file and os.path.exists(original_file):
     df_original = pd.read_csv(original_file)
+    # 個別の重複削除（url, title, content）
+    df_original.drop_duplicates(subset=['url', 'title', 'content'], inplace=True)
 else:
     df_original = pd.DataFrame()
-print(f'before: {df_original["url"].nunique()}')
 
+# 新規ファイルの読み込み
 df_new = pd.read_csv(new_file)
-df_concat = pd.concat([df_original, df_new])
-# 重複の削除
-df_concat.drop_duplicates(subset=['url', 'content', 'title'], inplace=True)
-print(f"after : {df_concat['url'].nunique()}")
+# 個別の重複削除（url, title, content）
+df_new.drop_duplicates(subset=['url', 'title', 'content'], inplace=True)
 
-df_concat = df_concat.dropna(subset=['title', 'content'])
+# データの結合
+df_concat = pd.concat([df_original, df_new])
+
+# 結合後の重複削除（url, title, content）
+df_concat.drop_duplicates(subset=['url', 'title', 'content'], inplace=True)
+
+# 個別の列に対する重複削除
+df_concat.drop_duplicates(subset=['title'], inplace=True)
+df_concat.drop_duplicates(subset=['content'], inplace=True)
+
+# NaN値の削除（title, content）
+df_concat.dropna(subset=['title', 'content'], inplace=True)
+
+# カテゴリの処理
 df_concat['category'] = pd.Categorical(df_concat['category'], categories=category_list, ordered=True)
 df_concat.sort_values(by='category', inplace=True)
+
+# ファイルへの出力
 df_concat.to_csv(output_file, index=False)
+print(f"after : {df_concat['url'].nunique()}")
 
 # データの確認
 df = df_concat.copy()[~df_concat['url'].str.contains('/pickup/')]
@@ -77,3 +92,4 @@ print(f"df['category'].value_counts(dropna=False):\n{df['category'].value_counts
 print('---------')
 for column in df.columns:
     print(f"df['{column}'].duplicated().sum(): {df[column].duplicated().sum()}")
+print(f"after : {df_concat['url'].nunique()}")

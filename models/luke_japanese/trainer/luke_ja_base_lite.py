@@ -45,7 +45,7 @@ df['text'] = df['text'].apply(clean_text)
 #df['url']に'/pickup/'が含まれる行を削除
 df = df[~df['url'].str.contains('/pickup/')]
 print(f"'url'列に'/pickup/'の含まれる行数: {df[df['url'].str.contains('/pickup/')]}")
-df = df.groupby('category').head(1000)
+df = df.groupby('category').head(2000)
 print(df['category'].value_counts(dropna=False))
 print(df['text'])
 
@@ -105,7 +105,7 @@ trainer = Trainer(
 )
 
 trainer.train()
-output_dir = '../versions/v100/'
+output_dir = '../versions/v101/'
 os.makedirs(output_dir, exist_ok=True)
 trainer.save_model(output_dir)
 print('The model has been saved.')

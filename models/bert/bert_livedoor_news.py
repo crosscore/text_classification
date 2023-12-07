@@ -9,8 +9,7 @@ import re
 import time
 import os
 
-def clean_text_for_bert(text):
-    #text = re.sub(r'\s+', ' ', text)
+def clean_text(text):
     text = text.strip()
     return text
 
@@ -26,8 +25,7 @@ def compute_metrics(eval_pred):
 start = time.time()
 df = pd.read_csv('../../../data/scraping_data/csv/yahoo_news/concat/yahoo_news_concat_1124_v3.csv')
 
-df['text'] = df['title'] + '。' + df['content']
-df['text'] = df['text'].apply(clean_text_for_bert)
+df['text'] = df['title'].apply(clean_text) + '。' + df['content'].apply(clean_text)
 print(df)
 print(df['text'])
 

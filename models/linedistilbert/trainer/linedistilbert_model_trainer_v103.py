@@ -11,7 +11,7 @@ import time
 import os
 import torch
 
-def clean_text_for_bert(text):
+def clean_text(text):
     if isinstance(text, float):
         text = str(text)
     text = text.strip()
@@ -65,9 +65,7 @@ start = time.time()
 # livedoor_news_dir = '../../../../livedoor_news/text'
 # df = livedoor_news_to_df(livedoor_news_dir)
 df = pd.read_csv('../../../data/scraping_data/csv/yahoo_news/concat/yahoo_news_concat_20231201_v1.csv')
-df['text'] = df['title'] + '。' + df['content']
-print(df['text'])
-df['text'] = df['text'].apply(clean_text_for_bert)
+df['text'] = df['title'].apply(clean_text) + '。' + df['content'].apply(clean_text)
 print(df)
 print(df['text'])
 

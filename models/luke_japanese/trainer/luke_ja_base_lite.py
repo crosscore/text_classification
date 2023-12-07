@@ -39,9 +39,8 @@ def compute_metrics(eval_pred):
 
 start = time.time()
 read_file = glob.glob('../../../data/scraping_data/csv/yahoo_news/concat/*.csv')
-df = pd.read_csv(read_file[0])
-df['text'] = df['title'] + '。' + df['content']
-df['text'] = df['text'].apply(clean_text)
+df = pd.read_csv(read_file[0], dtype={'user': str})
+df['text'] = df['title'].apply(clean_text) + '。' + df['content'].apply(clean_text)
 #df['url']に'/pickup/'が含まれる行を削除
 df = df[~df['url'].str.contains('/pickup/')]
 print(f"'url'列に'/pickup/'の含まれる行数: {df[df['url'].str.contains('/pickup/')]}")

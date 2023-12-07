@@ -10,7 +10,7 @@ df['eliminate_date'] = df['eliminate_date'].str.replace('+09:00', '')
 df['base_date'] = df['base_date'].str.replace('+09:00', '')
 
 #user,action,device_id,url,start_viewing_date,stop_viewing_date,
-df = df[['user', 'action', 'device_id', 'start_viewing_date', 'stop_viewing_date', 'url']]
+df = df[['user', 'action', 'device_id', 'start_viewing_date', 'stop_viewing_date', 'url', 'title', 'content']]
 
 df = df[df['action'] == 'view']
 df = df.dropna()

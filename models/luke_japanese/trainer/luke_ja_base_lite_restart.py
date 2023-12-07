@@ -1,4 +1,4 @@
-#luke_ja_large_v1.py
+#luke_ja_base_lite_restart.py
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -39,12 +39,9 @@ def compute_metrics(eval_pred):
 
 start = time.time()
 read_file = glob.glob('../../../data/scraping_data/csv/yahoo_news/concat/*.csv')
-df = pd.read_csv(read_file[0])
+df = pd.read_csv(read_file[0], dtype={'user': str})
 df['text'] = df['title'].apply(clean_text) + '。' + df['content'].apply(clean_text)
-#df['url']に'/pickup/'が含まれる行を削除
-df = df[~df['url'].str.contains('/pickup/')]
-print(f"'url'列に'/pickup/'の含まれる行数: {df[df['url'].str.contains('/pickup/')]}")
-df = df.groupby('category').head(1000)
+df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 2000))).reset_index(drop=True)
 print(df['category'].value_counts(dropna=False))
 print(df['text'])
 
@@ -70,11 +67,9 @@ tokenized_test_dataset = test_dataset.map(tokenize_function, batched=True)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# 既存のモデルのチェックポイントパス
-checkpoint_path = '../versions/'
-
-model = AutoModelForSequenceClassification.from_pretrained(checkpoint_path, num_labels=len(le.classes_)).to(device)
-tokenizer = AutoTokenizer.from_pretrained(checkpoint_path, trust_remote_code=True)
+# 事前学習済みモデルのロード
+model = AutoModelForSequenceClassification.from_pretrained(PRE_TRAINED, num_labels=len(le.classes_)).to(device)
+tokenizer = AutoTokenizer.from_pretrained(PRE_TRAINED, trust_remote_code=True)
 
 print(f"Class of tokenizer used: {tokenizer.__class__.__name__}")
 print(f"Class of model used: {model.__class__.__name__}")
@@ -107,14 +102,18 @@ trainer = Trainer(
     callbacks=[EarlyStoppingCallback(early_stopping_patience=1)]
 )
 
+# 既存のチェックポイントからの訓練を再開
+checkpoint_path = "./result/checkpoint-190/"
 trainer.train(resume_from_checkpoint=checkpoint_path)
 
 output_dir = '../versions/v101/'
 os.makedirs(output_dir, exist_ok=True)
+
 trainer.save_model(output_dir)
 print('The model has been saved.')
 
 test_result = trainer.evaluate(eval_dataset=tokenized_test_dataset)
 print("Accuracy:", test_result['eval_accuracy'])
+
 end = time.time()
 print(f'Elapsed time={end-start}')

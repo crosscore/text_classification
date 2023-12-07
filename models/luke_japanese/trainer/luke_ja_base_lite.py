@@ -1,4 +1,4 @@
-#luke_ja_large_v1.py
+#luke_ja_base_lite.py
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -41,10 +41,6 @@ start = time.time()
 read_file = glob.glob('../../../data/scraping_data/csv/yahoo_news/concat/*.csv')
 df = pd.read_csv(read_file[0], dtype={'user': str})
 df['text'] = df['title'].apply(clean_text) + '。' + df['content'].apply(clean_text)
-#df['url']に'/pickup/'が含まれる行を削除
-#df = df[~df['url'].str.contains('/pickup/')]
-print(f"'url'列に'/pickup/'の含まれる行数: {df[df['url'].str.contains('/pickup/')]}")
-#df = df.groupby('category').head(2000)
 df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 2000))).reset_index(drop=True)
 print(df['category'].value_counts(dropna=False))
 print(df['text'])
@@ -58,7 +54,6 @@ train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
 train_dataset = Dataset.from_dict({'text': train_df['text'].tolist(), 'label': train_df['label'].tolist()})
 test_dataset = Dataset.from_dict({'text': test_df['text'].tolist(), 'label': test_df['label'].tolist()})
 PRE_TRAINED = 'studio-ousia/luke-japanese-base-lite'
-#tokenizer = BertJapaneseTokenizer.from_pretrained(PRE_TRAINED)
 tokenizer = AutoTokenizer.from_pretrained(PRE_TRAINED, trust_remote_code=True)
 
 def tokenize_function(examples):
@@ -70,7 +65,6 @@ tokenized_train_dataset = train_dataset.map(tokenize_function, batched=True)
 tokenized_test_dataset = test_dataset.map(tokenize_function, batched=True)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-#model = DistilBertForSequenceClassification.from_pretrained(PRE_TRAINED, num_labels=len(le.classes_)).to(device)
 model = AutoModelForSequenceClassification.from_pretrained(PRE_TRAINED, num_labels=len(le.classes_)).to(device)
 
 print(f"Class of tokenizer used: {tokenizer.__class__.__name__}")
@@ -105,12 +99,15 @@ trainer = Trainer(
 )
 
 trainer.train()
+
 output_dir = '../versions/v101/'
 os.makedirs(output_dir, exist_ok=True)
+
 trainer.save_model(output_dir)
 print('The model has been saved.')
 
 test_result = trainer.evaluate(eval_dataset=tokenized_test_dataset)
 print("Accuracy:", test_result['eval_accuracy'])
+
 end = time.time()
 print(f'Elapsed time={end-start}')

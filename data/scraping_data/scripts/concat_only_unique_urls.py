@@ -46,30 +46,21 @@ print(f'output_file: {output_file}')
 
 if original_file and os.path.exists(original_file):
     df_original = pd.read_csv(original_file)
-    # 個別の重複削除（url, title, content）
-    df_original.drop_duplicates(subset=['url', 'title', 'content'], inplace=True)
 else:
     df_original = pd.DataFrame()
 
 print(f"befor : {df_original['url'].nunique()}")
 
-# 新規ファイルの読み込み
 df_new = pd.read_csv(new_file)
-# 個別の重複削除（url, title, content）
-df_new.drop_duplicates(subset=['url', 'title', 'content'], inplace=True)
-
-# データの結合
 df_concat = pd.concat([df_original, df_new])
-
-# 結合後の重複削除（url, title, content）
-df_concat.drop_duplicates(subset=['url', 'title', 'content'], inplace=True)
 
 # 個別の列に対する重複削除
 df_concat.drop_duplicates(subset=['title'], inplace=True)
 df_concat.drop_duplicates(subset=['content'], inplace=True)
+df_concat.drop_duplicates(subset=['url'], inplace=True)
 
-# NaN値の削除（title, content）
-df_concat.dropna(subset=['title', 'content'], inplace=True)
+# NaN値の削除
+df_concat.dropna()
 
 # カテゴリの処理
 df_concat['category'] = pd.Categorical(df_concat['category'], categories=category_list, ordered=True)
@@ -94,4 +85,3 @@ print(f"df['category'].value_counts(dropna=False):\n{df['category'].value_counts
 print('---------')
 for column in df.columns:
     print(f"df['{column}'].duplicated().sum(): {df[column].duplicated().sum()}")
-print(f"after : {df_concat['url'].nunique()}")

@@ -39,13 +39,13 @@ def compute_metrics(eval_pred):
 
 start = time.time()
 read_file = glob.glob('../../../data/scraping_data/csv/yahoo_news/concat/*.csv')
-df = pd.read_csv(read_file[0], dtype={'user': str})
-df['text'] = df['title'].apply(clean_text) + '。' + df['content'].apply(clean_text)
+df = pd.read_csv(read_file[0])
+df['text'] = df['title'] + '。' + df['content']
+df['text'] = df['text'].apply(clean_text)
 #df['url']に'/pickup/'が含まれる行を削除
-#df = df[~df['url'].str.contains('/pickup/')]
+df = df[~df['url'].str.contains('/pickup/')]
 print(f"'url'列に'/pickup/'の含まれる行数: {df[df['url'].str.contains('/pickup/')]}")
-#df = df.groupby('category').head(2000)
-df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 2000))).reset_index(drop=True)
+df = df.groupby('category').head(1000)
 print(df['category'].value_counts(dropna=False))
 print(df['text'])
 
@@ -70,8 +70,12 @@ tokenized_train_dataset = train_dataset.map(tokenize_function, batched=True)
 tokenized_test_dataset = test_dataset.map(tokenize_function, batched=True)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-#model = DistilBertForSequenceClassification.from_pretrained(PRE_TRAINED, num_labels=len(le.classes_)).to(device)
-model = AutoModelForSequenceClassification.from_pretrained(PRE_TRAINED, num_labels=len(le.classes_)).to(device)
+
+# 既存のモデルのチェックポイントパス
+checkpoint_path = '../versions/'
+
+model = AutoModelForSequenceClassification.from_pretrained(checkpoint_path, num_labels=len(le.classes_)).to(device)
+tokenizer = AutoTokenizer.from_pretrained(checkpoint_path, trust_remote_code=True)
 
 print(f"Class of tokenizer used: {tokenizer.__class__.__name__}")
 print(f"Class of model used: {model.__class__.__name__}")
@@ -104,7 +108,8 @@ trainer = Trainer(
     callbacks=[EarlyStoppingCallback(early_stopping_patience=1)]
 )
 
-trainer.train()
+trainer.train(resume_from_checkpoint=checkpoint_path)
+
 output_dir = '../versions/v101/'
 os.makedirs(output_dir, exist_ok=True)
 trainer.save_model(output_dir)

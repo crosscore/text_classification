@@ -71,7 +71,8 @@ df_concat.to_csv(output_file, index=False)
 print(f"after : {df_concat['url'].nunique()}")
 
 # データの確認
-df = df_concat.copy()[~df_concat['url'].str.contains('/pickup/')]
+#df = df_concat.copy()[~df_concat['url'].str.contains('/pickup/')]
+df = df_concat.copy()
 print('---------')
 print(f'df.isnull().sum():\n{df.isnull().sum()}')
 print('---------')

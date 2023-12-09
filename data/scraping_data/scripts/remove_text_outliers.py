@@ -9,8 +9,9 @@ def remove_outliers(df, column):
     lengths = df[column].str.len()
     mean_len = lengths.mean()
     std_len = lengths.std()
-    threshold = mean_len + 3 * std_len
-    return df[lengths <= threshold]
+    upper_threshold = mean_len + 3 * std_len
+    lower_threshold = mean_len - 3 * std_len
+    return df[(lengths <= upper_threshold) & (lower_threshold <= lengths)]
 
 def find_latest_csv():
     now = datetime.datetime.now()

@@ -39,7 +39,7 @@ new_file = f'../csv/yahoo_news/daily/yahoo_news_articles_{today_date}_v{version}
 output_file = f'../csv/yahoo_news/concat/yahoo_news_concat_{today_date}_v{version}.csv'
 original_file = f'../csv/yahoo_news/concat/yahoo_news_concat_{today_date}_v{latest_version_today}.csv' if latest_version_today > 0 else os.path.join('../csv/yahoo_news/concat/', latest_file_yesterday) if latest_file_yesterday else None
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
-
+print("====== exec concat_only_unique_urls.py ======")
 print(f'input_old: {original_file}')
 print(f'input_new: {new_file}')
 print(f'output_file: {output_file}')

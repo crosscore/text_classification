@@ -9,7 +9,7 @@ print(latest_file)
 df = pd.read_csv(latest_file, encoding='utf-8')
 
 #dfの'url'列に'/pickup/'の文字列が含まれる行を削除
-df = df.copy()[~df['url'].str.contains('/pickup/')]
+#df = df.copy()[~df['url'].str.contains('/pickup/')]
 
 print('---------')
 print(f'df.isnull().sum():\n{df.isnull().sum()}')

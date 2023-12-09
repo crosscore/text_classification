@@ -54,19 +54,18 @@ print(f"befor : {df_original['url'].nunique()}")
 df_new = pd.read_csv(new_file)
 df_concat = pd.concat([df_original, df_new])
 
-# 個別の列に対する重複削除
 df_concat.drop_duplicates(subset=['title'], inplace=True)
 df_concat.drop_duplicates(subset=['content'], inplace=True)
 df_concat.drop_duplicates(subset=['url'], inplace=True)
-
-# NaN値の削除
 df_concat.dropna()
+
+#str行のみを残す(floatのみの行に対処)
+df_concat = df_concat[(df_concat['title'].apply(lambda x: isinstance(x, str))) & (df_concat['content'].apply(lambda x: isinstance(x, str)))]
 
 # カテゴリの処理
 df_concat['category'] = pd.Categorical(df_concat['category'], categories=category_list, ordered=True)
 df_concat.sort_values(by='category', inplace=True)
 
-# ファイルへの出力
 df_concat.to_csv(output_file, index=False)
 print(f"after : {df_concat['url'].nunique()}")
 
@@ -86,3 +85,8 @@ print(f"df['category'].value_counts(dropna=False):\n{df['category'].value_counts
 print('---------')
 for column in df.columns:
     print(f"df['{column}'].duplicated().sum(): {df[column].duplicated().sum()}")
+
+#'../csv/yahoo_news/daily/'フォルダの.csvファイルを全削除
+for file in os.listdir('../csv/yahoo_news/daily/'):
+    os.remove(os.path.join('../csv/yahoo_news/daily/', file))
+    print(f"remove: {file}")

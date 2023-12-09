@@ -41,7 +41,7 @@ start = time.time()
 read_file = glob.glob('../../../data/scraping_data/csv/yahoo_news/concat/*.csv')
 df = pd.read_csv(read_file[0], dtype={'user': str})
 df['text'] = df['title'].apply(clean_text) + '。' + df['content'].apply(clean_text)
-df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 3000))).reset_index(drop=True)
+df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 2000), random_state=42)).reset_index(drop=True)
 print(df['category'].value_counts(dropna=False))
 print(df['text'])
 

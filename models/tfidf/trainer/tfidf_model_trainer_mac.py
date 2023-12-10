@@ -24,18 +24,18 @@ def extract_nouns_adjs(text):
 
 start = time.time()
 
-# ラベルエンコーダーの初期化
+# Initialize label encoder
 le = LabelEncoder()
 
-# 'category' 列を数値に変換
+# convert 'category' column to number
 encoded_labels = le.fit_transform(df['category'])
 print(encoded_labels)
 
-# ラベルの対応関係を表示
+# Show label correspondence
 label_mapping = dict(zip(le.classes_, range(len(le.classes_))))
 print("Label mapping:", label_mapping)
 
-# 並列処理を行わずに実行
+# Run without parallel processing
 texts = df['title'] + " " + df['content']
 print(texts)
 texts = texts.apply(extract_nouns_adjs)
@@ -43,15 +43,15 @@ end1 = time.time()
 print(texts)
 print(f'time={end1 - start}')
 
-# データセットをトレーニングセットとテストセットに分割
+# Split the dataset into training set and test set
 TEST_SIZE = 0.2
 train_texts, test_texts, train_labels, test_labels = train_test_split(texts, encoded_labels, test_size=TEST_SIZE, random_state=42, stratify=encoded_labels)
 print(f'test_size={TEST_SIZE}')
 
-#n-gramを除去。1-gramと2-gramの特徴量を生成。マイナーパラメータmin_dfで最小ドキュメント頻度を設定
+#Remove n-gram. Generate 1-gram and 2-gram features. Set minimum document frequency with minor parameter min_df
 tfidf = TfidfVectorizer()
 
-# pipelineにGridSearchCVを追加してハイパーパラメータチューニング
+# Add GridSearchCV to the pipeline and tune hyperparameters
 pipeline = make_pipeline(tfidf, MultinomialNB())
 
 parameters = {
@@ -65,19 +65,19 @@ grid.fit(train_texts, train_labels)
 print("Best parameters:", grid.best_params_)
 print("Best score:", grid.best_score_)
 
-#ベストパラメータでmodelを構築
+#Build model with best parameters
 tfidf = TfidfVectorizer(min_df=grid.best_params_['tfidfvectorizer__min_df'], ngram_range=grid.best_params_['tfidfvectorizer__ngram_range'])
 nb = MultinomialNB(alpha=grid.best_params_['multinomialnb__alpha'])
 model = make_pipeline(tfidf, nb)
 
-# モデルのトレーニング
+# Train the model
 model.fit(train_texts, train_labels)
 
-# モデルの評価
+# Evaluate the model
 predicted = model.predict(test_texts)
 print(f"Accuracy: {metrics.accuracy_score(test_labels, predicted)}")
 
-# モデルの保存
+# Save model
 output_path = '../versions/mac/yahoo_news_tfidf_model.pkl'
 os.makedirs(os.path.dirname(output_path), exist_ok=True)
 import joblib

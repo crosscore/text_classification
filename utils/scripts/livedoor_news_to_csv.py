@@ -5,8 +5,8 @@ import csv
 def extract_data(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         lines = file.readlines()
-        title = lines[2].strip()  # 3行目がタイトル
-        content = ''.join(lines[3:]).strip()  # 4行目以降がコンテンツ
+        title = lines[2].strip() # 3rd line is title
+        content = ''.join(lines[3:]).strip() # Content from the 4th line onwards
     return title, content
 
 def check_empty_entries(root_dir):

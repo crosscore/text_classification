@@ -73,7 +73,7 @@ def scrape_news(category, url):
             print(f'response.status_code: {response.status_code}')
             # Changed to use XML parser
             soup = BeautifulSoup(response.content, 'xml')
-            if "指定されたURLは存在しませんでした。" in str(soup):
+            if "The specified URL did not exist." in str(soup):
                 print(f"Error page detected, skipping remaining page for ({category}) url:{url}")
                 return []
             articles = []

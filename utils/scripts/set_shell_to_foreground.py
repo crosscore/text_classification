@@ -4,15 +4,15 @@ import win32gui
 
 def set_foreground(window_title):
     try:
-        # window_titleが含まれるウィンドウを取得
+        # Get the window containing window_title
         window = gw.getWindowsWithTitle(window_title)[0]
         hwnd = window._hWnd
-        # ウィンドウを最前面に設定
+        # set window to front
         win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, window.left, window.top, window.width, window.height, 0)
     except IndexError:
-        print(f"'{window_title}' タイトルのウィンドウが見つかりませんでした。")
+        print(f"No window with title '{window_title}' was found.")
     except Exception as e:
-        print(f"エラー: {e}")
+        print(f"Error: {e}")
 
-# PowerShellウィンドウのタイトルを指定（部分一致）
+# Specify the PowerShell window title (partial match)
 set_foreground("PowerShell")

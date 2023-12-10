@@ -66,7 +66,7 @@ tokenized_test_dataset = test_dataset.map(tokenize_function, batched=True)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# 事前学習済みモデルのロード
+# Loading a pretrained model
 model = AutoModelForSequenceClassification.from_pretrained(PRE_TRAINED, num_labels=len(le.classes_)).to(device)
 tokenizer = AutoTokenizer.from_pretrained(PRE_TRAINED, trust_remote_code=True)
 
@@ -101,7 +101,7 @@ trainer = Trainer(
     callbacks=[EarlyStoppingCallback(early_stopping_patience=1)]
 )
 
-# 既存のチェックポイントからの訓練を再開
+# Resume training from existing checkpoint
 checkpoint_path = "./result/checkpoint-273/"
 trainer.train(resume_from_checkpoint=checkpoint_path)
 

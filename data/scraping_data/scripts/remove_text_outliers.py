@@ -31,9 +31,9 @@ def delete_except_latest_files(directory, number_of_files_to_keep):
             files_with_date_version.append((date, version, file))
     if not files_with_date_version:
         return
-    # ファイルを日付とバージョンでソート
+    # Sort files by date and version
     sorted_files = sorted(files_with_date_version, key=lambda x: (x[0], x[1]), reverse=True)
-    # 指定された数の最新ファイルを保持し、残りを削除
+    # Keep the specified number of latest files and delete the rest
     latest_files = set(file[2] for file in sorted_files[:number_of_files_to_keep])
     for file in files_with_date_version:
         if file[2] not in latest_files:
@@ -55,7 +55,7 @@ def remove_outliers(df, column):
         lower_threshold = mean_len - threshold_multiplier * std_len
         cleaned_df = df_category[(df_category[column].str.len() <= upper_threshold) & (df_category[column].str.len() >= lower_threshold)]
         cleaned_dfs.append(cleaned_df)
-        print(f"異常値除去の閾値を調整しました: {category}")
+        print(f"Adjusted the threshold for removing outliers: {category}")
     cleaned_df_combined = pd.concat(cleaned_dfs).reset_index(drop=True)
     return cleaned_df_combined
 

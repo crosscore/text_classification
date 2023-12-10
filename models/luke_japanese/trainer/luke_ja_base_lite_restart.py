@@ -54,7 +54,6 @@ train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
 train_dataset = Dataset.from_dict({'text': train_df['text'].tolist(), 'label': train_df['label'].tolist()})
 test_dataset = Dataset.from_dict({'text': test_df['text'].tolist(), 'label': test_df['label'].tolist()})
 PRE_TRAINED = 'studio-ousia/luke-japanese-base-lite'
-#tokenizer = BertJapaneseTokenizer.from_pretrained(PRE_TRAINED)
 tokenizer = AutoTokenizer.from_pretrained(PRE_TRAINED, trust_remote_code=True)
 
 def tokenize_function(examples):

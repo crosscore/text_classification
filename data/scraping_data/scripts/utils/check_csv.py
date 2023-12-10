@@ -3,12 +3,12 @@ import glob
 import re
 
 file_list = glob.glob('../../csv/yahoo_news/concat/*_v*.csv')
-# バージョン番号に基づいて最新のファイルを選択
+# Select latest files based on version number
 latest_file = max(file_list, key=lambda x: int(re.search(r'_v(\d+).csv', x).group(1)))
 print(latest_file)
 df = pd.read_csv(latest_file, encoding='utf-8')
 
-#dfの'url'列に'/pickup/'の文字列が含まれる行を削除
+#Delete the row that contains the string '/pickup/' in the 'url' column of df
 #df = df.copy()[~df['url'].str.contains('/pickup/')]
 
 print('---------')

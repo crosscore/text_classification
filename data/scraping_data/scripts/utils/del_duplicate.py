@@ -6,10 +6,10 @@ df = pd.read_csv(files[0])
 
 print(df['category'].value_counts())
 
-#dfの'url'列の重複している行の数を出力
+#　Outputs the number of rows where the 'url' column of df is duplicated
 print(df['url'].duplicated().sum())
 
-#dfの'url'の重複を削除する
+#　Remove duplicate 'url' in df
 df = df.drop_duplicates(subset='url')
 print(df['url'].duplicated().sum())
 

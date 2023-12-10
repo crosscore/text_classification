@@ -3,10 +3,10 @@ import pandas as pd
 device_original = pd.read_csv('../../../csv/original/device_original_formatted.csv', dtype={'user':str})
 device_with_category = pd.read_csv('../../../csv/add_category/device_with_category_v3.csv', dtype={'user':str})
 
-# 'category' 列を device_original に追加
+# Add 'category' column to device_original
 device_original['category'] = ''
 
-# 'url' 列の値が一致する行の 'category' 値を更新
+# Update 'category' value of rows with matching 'url' column value
 for i, row in device_original.iterrows():
     url = row['url']
     category = device_with_category[device_with_category['url'] == url]['category']

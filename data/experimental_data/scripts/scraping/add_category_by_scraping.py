@@ -63,7 +63,7 @@ def parse_html_for_category(html_content):
         metatags = soup.find_all('meta')
         for meta in metatags:
             if 'name' in meta.attrs and meta.attrs['name'] == 'description':
-                content = meta.attrs.get('content', '').lower()  # 小文字に変換
+                content = meta.attrs.get('content', '').lower() # convert to lower case
                 if 'スポーツ' in content:
                     print("Discover categories among meta tags: return 'スポーツ'")
                     return 'スポーツ'
@@ -93,7 +93,7 @@ def get_category_from_archive(url, max_retries=3, wait_seconds=12, max_wait_seco
                 response = requests.get(archive_url, timeout=18)
                 response.raise_for_status()
                 print("Request successful. Status code: 200")
-                # 200ステータスコードの場合のみHTMLを保存
+                # Save HTML only for 200 status code
                 os.makedirs(html_dir, exist_ok=True)
                 with open(file_path, 'w', encoding='utf-8') as f:
                     print(f'open: {file_path}')
@@ -133,7 +133,7 @@ def get_category_from_archive(url, max_retries=3, wait_seconds=12, max_wait_seco
                 print(f"Retrying... ({retries}/{max_retries})")
                 time.sleep(wait_seconds)
                 wait_seconds = min(wait_seconds * 2, max_wait_seconds)
-    # HTMLの内容を解析してカテゴリを見つける
+    # Parse HTML content to find categories
     if html_content:
         return parse_html_for_category(html_content)
     print("Retry_limit_exceeded.")
@@ -157,14 +157,14 @@ os.makedirs(output_dir, exist_ok=True)
 output_file_complete = "../../csv/add_category/device_with_category.csv"
 output_file_partial = "../../csv/add_category/device_with_category_partial.csv"
 
-# output_file_partialの存否により処理を分岐
+# Branch processing depending on the presence or absence of output_file_partial
 if os.path.exists(output_file_partial):
     print(f"Loading partial data from {output_file_partial}")
     df = pd.read_csv(output_file_partial, dtype={'user': str})
 else:
     print("Loading original data")
     df = pd.read_csv('../../csv/original/device_original.csv', dtype={'user': str})
-    # 'category' 列が存在しない場合は、空の列を作成
+    # Create empty column if 'category' column does not exist
     if 'category' not in df.columns:
         df['category'] = None
 
@@ -173,38 +173,36 @@ exit_listener = threading.Thread(target=listen_for_exit_command)
 exit_listener.start()
 
 retry_limit_exceeded = False
-exit_command_detected = False #スレッド終了フラグ
+exit_command_detected = False
 
 error_urls = []
 categories = []
 for index, row in df.iterrows():
     if exit_command_issued:
         print("Exit command issued. Saving partial data...")
-        # 全行にカテゴリを割り当てるまで、現在のcategoriesの長さをチェック
+        # Check length of current categories until all rows are assigned categories
         while len(categories) < len(df):
-            categories.append(None) #未割り当ての行にはNoneを追加
-        df['category'] = categories  # 現在までの結果を保存
+            categories.append(None)
+        df['category'] = categories
         df.to_csv(output_file_partial, index=False)
         print(f"{output_file_partial} was saved: ")
         exit_command_detected = True
         break
-    # 既にカテゴリが割り当てられている行はスキップ
+    # Skip rows that already have a category assigned
     if pd.notna(row['category']):
         categories.append(row['category'])
         continue
-    # get_category_from_archive関数を呼び出してカテゴリを取得
+    # Get the category by calling get_category_from_archive function
     category = get_category_from_archive(row['url'])
     if category in ["retry_limit_exceeded", "request_exception", "category_not_found"]:
         print("Error occurred. URL will be reprocessed later.")
-        categories.append(None)  # エラー時はNoneを追加
+        categories.append(None)
         error_urls.append((row['url'], row['title']))
         continue
-    # 取得したカテゴリをリストに追加
     categories.append(category)
-# 'category' 列を更新（もしくは追加）
 df['category'] = categories
 
-# 処理が完了した場合、完全なデータとエラーURLのデータを保存
+# If processing is completed, save complete data and error URL data
 if not exit_command_detected:
     if retry_limit_exceeded:
         df.to_csv(output_file_partial, index=False)

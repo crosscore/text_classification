@@ -22,7 +22,6 @@ def delete_old_files(directory, days=1):
 
 def delete_except_latest_files(directory, number_of_files_to_keep):
     pattern = re.compile(r'(\d{8})_v(\d+)\.csv$')
-
     files_with_date_version = []
     for file in os.listdir(directory):
         match = pattern.search(file)
@@ -30,13 +29,10 @@ def delete_except_latest_files(directory, number_of_files_to_keep):
             date = match.group(1)
             version = int(match.group(2))
             files_with_date_version.append((date, version, file))
-
     if not files_with_date_version:
         return
-
     # ファイルを日付とバージョンでソート
     sorted_files = sorted(files_with_date_version, key=lambda x: (x[0], x[1]), reverse=True)
-
     # 指定された数の最新ファイルを保持し、残りを削除
     latest_files = set(file[2] for file in sorted_files[:number_of_files_to_keep])
     for file in files_with_date_version:
@@ -62,7 +58,6 @@ def remove_outliers(df, column):
         print(f"異常値除去の閾値を調整しました: {category}")
     cleaned_df_combined = pd.concat(cleaned_dfs).reset_index(drop=True)
     return cleaned_df_combined
-
 
 def apply_remove_outliers(df):
     df['combined_text'] = df['title'] + ' ' + df['content']
@@ -93,23 +88,21 @@ print(f"latest_csv: {latest_csv}")
 if latest_csv and os.path.exists(latest_csv):
     df = pd.read_csv(latest_csv)
     before_num = df['title'].nunique()
-    # 異常値の削除
+    # Delete outliers
     df = apply_remove_outliers(df)
-    # 処理後のデータを保存
+    # Save processed data
     df.to_csv(latest_csv, index=False)
     backup_csv = os.path.basename(latest_csv)
-    backup_path = os.path.join(backup_directory, backup_csv) # パスの結合
-
+    backup_path = os.path.join(backup_directory, backup_csv)
     try:
         df.to_csv(backup_path, index=False)
         print(f"Backup CSV saved: {backup_path}")
     except Exception as e:
         print(f"Error saving backup CSV: {e}")
-
     delete_except_latest_files(concat_directory, 1)
     delete_except_latest_files(backup_directory, 3)
 else:
-    print("最新のCSVファイルが見つかりませんでした。")
+    print("The latest CSV file was not found.")
     before_num = 0
 
 print(f"before: {before_num}")

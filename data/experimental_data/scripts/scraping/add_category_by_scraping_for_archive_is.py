@@ -66,7 +66,7 @@ def get_url_from_archiveis_selenium(original_url):
     options.headless = True
     options.add_argument('--disable-gpu')
     options.add_argument('--no-sandbox')
-    # Chrome WebDriverを自動でダウンロード
+    # Automatically download Chrome WebDriver
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
     try:
@@ -79,7 +79,7 @@ def get_url_from_archiveis_selenium(original_url):
             if link['href'] != original_url:
                 print(f"link found: {link['href']}")
                 return link['href']
-        #patternの中に'結果はありません'という文字列が存在するかを確認
+        # Check if the string '結果はありません' exists in pattern
         if soup.find(string='結果はありません'):
             print("find '結果はありません' in pattern.")
             return None
@@ -121,7 +121,7 @@ def get_category_from_archive(url, max_retries=3, wait_seconds=12, max_wait_seco
         print(f'File already exists: {file_path}')
         with open(file_path, 'r', encoding='utf-8') as f:
             html_content = f.read()
-        # 保存されたHTMLファイルからarchive_urlを取得
+        # Get archive_url from saved HTML file
         archive_url = get_url_from_saved_html(file_path)
         print(f"archive_url: {archive_url}")
         if not archive_url:
@@ -129,7 +129,7 @@ def get_category_from_archive(url, max_retries=3, wait_seconds=12, max_wait_seco
             return "404_not_found"
     else:
         print(f'File does not exist: {file_path}')
-        # Seleniumを使用してarchive.isのページを取得し、HTMLを保存する)
+        # Use Selenium to get the page in archive.is and save the HTML)
         while retries < max_retries:
             try:
                 original_url = 'https://archive.is/' + url
@@ -139,7 +139,7 @@ def get_category_from_archive(url, max_retries=3, wait_seconds=12, max_wait_seco
                 if not archive_url:
                     print("No archive_url found. Skipping...")
                     return "404_not_found"
-                # Seleniumを使用してページのHTMLを取得
+                # Get page HTML using Selenium
                 options = Options()
                 options.headless = True
                 service = Service(ChromeDriverManager().install())
@@ -147,7 +147,7 @@ def get_category_from_archive(url, max_retries=3, wait_seconds=12, max_wait_seco
                 driver.get(archive_url)
                 html_content = driver.page_source
                 driver.quit()
-                # 200ステータスコードの場合のみHTMLを保存
+                # Save HTML only for 200 status code
                 os.makedirs(html_dir, exist_ok=True)
                 with open(file_path, 'w', encoding='utf-8') as f:
                     print(f'open: {file_path}')
@@ -186,7 +186,7 @@ def get_category_from_archive(url, max_retries=3, wait_seconds=12, max_wait_seco
                 print(f"Retrying... ({retries}/{max_retries})")
                 time.sleep(wait_seconds)
                 wait_seconds = min(wait_seconds * 2, max_wait_seconds)
-    # HTMLの内容を解析してカテゴリを見つける
+    # Parse HTML content to find categories
     if html_content:
         return parse_html_for_category(html_content, archive_url)
     print("Retry_limit_exceeded.")
@@ -213,7 +213,7 @@ os.makedirs(output_dir, exist_ok=True)
 output_file_complete = "../../csv/add_category/device_with_category_v2.csv"
 output_file_partial = "../../csv/add_category/device_with_category_v2_partial.csv"
 
-# output_file_partialの存否により処理を分岐
+# Branch processing depending on the presence or absence of output_file_partial
 if os.path.exists(output_file_partial):
     print(f"Loading partial data from {output_file_partial}")
     df = pd.read_csv(output_file_partial, dtype={'user': str})
@@ -227,14 +227,14 @@ exit_listener = threading.Thread(target=listen_for_exit_command)
 exit_listener.start()
 
 retry_limit_exceeded = False
-exit_command_detected = False #スレッド終了フラグ
+exit_command_detected = False
 
 error_urls = []
 categories = []
 for index, row in df.iterrows():
     if exit_command_issued:
         print("Exit command issued. Saving partial data...")
-        # 全行にカテゴリを割り当てるまで、現在のcategoriesの長さをチェック
+        # Check length of current categories until all rows are assigned categories
         while len(categories) < len(df):
             categories.append(None)
         df['category'] = categories
@@ -242,11 +242,11 @@ for index, row in df.iterrows():
         print(f"{output_file_partial} was saved: ")
         exit_command_detected = True
         break
-    # 既にカテゴリが割り当てられている行はスキップ
+    # Skip rows that already have a category assigned
     if pd.notna(row['category']):
         categories.append(row['category'])
         continue
-    # get_category_from_archive関数を呼び出してカテゴリを取得
+    # Get category by get_category_from_archive function
     category = get_category_from_archive(row['url'])
     if category in ["retry_limit_exceeded", "request_exception", "category_not_found"]:
         print("Error occurred. URL will be reprocessed later.")
@@ -256,7 +256,7 @@ for index, row in df.iterrows():
     categories.append(category)
 df['category'] = categories
 
-# 処理が完了した場合、完全なデータとエラーURLのデータを保存
+# If processing is completed, save complete data and error URL data
 if not exit_command_detected:
     if retry_limit_exceeded:
         df.to_csv(output_file_partial, index=False)

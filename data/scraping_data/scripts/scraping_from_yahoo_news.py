@@ -55,7 +55,7 @@ topic_urls = {category: f'{rss_topics}{topic_categories[category]}.xml' for cate
 print(category_urls)
 print(topic_urls)
 
-# 重複排除用セット
+# Deduplication set
 all_urls_set = set()
 
 skipped_articles = 0
@@ -71,7 +71,7 @@ def scrape_news(category, url):
             print(f'scrape_news... {category}: {url}')
             response = requests.get(url, timeout=(12, 18))
             print(f'response.status_code: {response.status_code}')
-            # XMLパーサーを使用するように変更
+            # Changed to use XML parser
             soup = BeautifulSoup(response.content, 'xml')
             if "指定されたURLは存在しませんでした。" in str(soup):
                 print(f"Error page detected, skipping remaining page for ({category}) url:{url}")

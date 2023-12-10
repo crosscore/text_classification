@@ -60,15 +60,15 @@ df_concat.drop_duplicates(subset=['content'], inplace=True)
 df_concat.drop_duplicates(subset=['url'], inplace=True)
 df_concat.dropna()
 
-#str行のみを残す(floatのみの行に対処)
+# Leave only str lines (deals with float-only lines)
 df_concat = df_concat[(df_concat['title'].apply(lambda x: isinstance(x, str))) & (df_concat['content'].apply(lambda x: isinstance(x, str)))]
 
-# カテゴリの処理
+# Processing categories
 df_concat['category'] = pd.Categorical(df_concat['category'], categories=category_list, ordered=True)
 df_concat.sort_values(by='category', inplace=True)
 df_concat.to_csv(output_file, index=False)
 
-# データの確認
+# Check the data
 #df = df_concat.copy()[~df_concat['url'].str.contains('/pickup/')]
 df = df_concat.copy()
 print('---------')
@@ -83,7 +83,7 @@ print('---------')
 for column in df.columns:
     print(f"df['{column}'].duplicated().sum(): {df[column].duplicated().sum()}")
 print('---------')
-#'../csv/yahoo_news/daily/'フォルダの.csvファイルを全削除
+#Delete all .csv files in '../csv/yahoo_news/daily/' folder
 for file in os.listdir('../csv/yahoo_news/daily/'):
     os.remove(os.path.join('../csv/yahoo_news/daily/', file))
     print(f"remove: {file}")

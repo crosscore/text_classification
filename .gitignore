@@ -5,6 +5,7 @@ daily
 data/livedoor/text/
 data/scraping_data/csv/yahoo_news/warehouse/
 data/scraping_data/csv/yahoo_news/daily/
+data/scraping_data/csv/yahoo_news/backup/
 models/linedistilbert/trainer/result/
 models/linedistilbert/versions/
 models/linedistilbert/utils/reuslt

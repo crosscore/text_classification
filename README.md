@@ -1,2 +1,2 @@
 # text_classification
-このプロジェクトでは、ユーザーの実験データ（.csv, .json）を利用しており、可視化のための画像ファイル(.png)が出力されますが、機密情報を含むため.gitignoreによって意図的に除外されています。
+This project uses user experimental data (csv, json) and outputs image files for visualization, but they are intentionally excluded because they contain confidential information.

@@ -1,2 +1,2 @@
 # text_classification
-This project uses user experimental data (csv, json) and outputs image files for visualization, but they are intentionally excluded because they contain confidential information.
+This project uses user experiment data (csv, json) and includes images for visualization. However, it has been intentionally excluded because it contains confidential information.

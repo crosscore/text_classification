@@ -210,8 +210,8 @@ exit_thread = False
 
 output_dir = "../../csv/add_category"
 os.makedirs(output_dir, exist_ok=True)
-output_file_complete = "../../csv/add_category/device_with_category_v2.csv"
-output_file_partial = "../../csv/add_category/device_with_category_v2_partial.csv"
+output_file_complete = "../../csv/add_category/complete/category_nan_row_comp_v2.csv"
+output_file_partial = "../../csv/add_category/partial/category_nan_row_partial_v2.csv"
 
 # Branch processing depending on the presence or absence of output_file_partial
 if os.path.exists(output_file_partial):
@@ -219,7 +219,7 @@ if os.path.exists(output_file_partial):
     df = pd.read_csv(output_file_partial, dtype={'user': str})
 else:
     print("Loading original data")
-    df = pd.read_csv('../../csv/original/all_404_not_found.csv', dtype={'user': str})
+    df = pd.read_csv('../../csv/original/category_nan_row_v2.csv', dtype={'user': str})
     df['category'] = None
 
 exit_command_issued = False
@@ -265,11 +265,14 @@ if not exit_command_detected:
         print("All data processed successfully. Saving data...")
     if error_urls:
         error_df = pd.DataFrame(error_urls, columns=['url', 'title'])
-        error_output_file = "../../csv/add_category/error_urls.csv"
+        error_output_file = "../../csv/add_category/error/error_urls_v2.csv"
         error_df.to_csv(error_output_file, index=False)
         print(f"Error URLs saved to {error_output_file}")
     exit_thread = True
 
+# Tell the user that the process is complete
+print("Processing completed.")
+input("Press Enter to wait for thread to terminate...")
 exit_listener.join()
 end = time.time()
 print(f"Elapsed time: {end - start} seconds.")

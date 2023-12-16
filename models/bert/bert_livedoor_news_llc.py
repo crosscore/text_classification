@@ -25,14 +25,14 @@ def set_seed(seed_value=369):
 def get_device():
     return "cuda" if torch.cuda.is_available() else "cpu"
 
-# 乱数シードの設定
+# Set random number seed
 set_seed(369)
 
-# デバイスの設定
+# Device settings
 device = get_device()
 print(f"Using {device}...")
 
-# カテゴリー数と内容を確認
+# Check the number of categories and contents
 livedoor_news_path = "../../../livedoor_news/text/"
 files_folders = [name for name in os.listdir(livedoor_news_path)]
 print(files_folders)
@@ -41,7 +41,7 @@ categories = [name for name in os.listdir(
 print("カテゴリー数:", len(categories))
 print(categories)
 
-# 本文を取得する前処理関数を定義
+# Define a preprocessing function to get the body text
 def extract_main_txt(file_name):
     with open(file_name, encoding='utf-8') as text_file:
         text = text_file.readlines()[3:]
@@ -52,31 +52,31 @@ def extract_main_txt(file_name):
             {'\n': '', '\t': '', '\r': '', '\u3000': ''}))
         return text
 
-# リストに前処理した本文と、カテゴリーのラベルを追加していく
+# Add preprocessed text and category labels to the list
 list_text = []
 list_label = []
 for cat in categories:
     text_files = glob.glob(os.path.join(livedoor_news_path, cat, "*.txt"))
-    # 前処理extract_main_txtを実施して本文を取得
+    # Execute preprocessing extract_main_txt and get the main text
     body = [extract_main_txt(text_file) for text_file in text_files]
-    label = [cat] * len(body)  # body数分だけカテゴリー名のラベルのリストを作成
-    list_text.extend(body)  # appendが要素を追加するのに対して、extendはリストごと追加する
+    label = [cat] * len(body) # Create a list of category name labels as many as body
+    list_text.extend(body) # append adds an element, whereas extend adds the entire list
     list_label.extend(label)
 
 df = pd.DataFrame({'text': list_text, 'label': list_label})
 print(df)
 print(df.shape)
 
-# カテゴリーの辞書を作成
+# Create a category dictionary
 dic_id2cat = dict(zip(list(range(len(categories))), categories))
 dic_cat2id = dict(zip(categories, list(range(len(categories)))))
 print(dic_id2cat)
 print(dic_cat2id)
 
-# DataFrameにカテゴリーindexの列を作成
+# Create category index column in DataFrame
 df["label_index"] = df["label"].map(dic_cat2id)
 
-# カスタム Dataset クラスの定義
+# Define a custom Dataset class
 class LivedoorDataset(Dataset):
     def __init__(self, dataframe, tokenizer, max_length, label_dict):
         self.dataframe = dataframe
@@ -88,10 +88,10 @@ class LivedoorDataset(Dataset):
         return len(self.dataframe)
 
     def __getitem__(self, idx):
-        text = self.dataframe.iloc[idx, 0]  # テキストデータ
-        label_str = self.dataframe.iloc[idx, 1]  # ラベル（文字列）
-        label = self.label_dict[label_str]  # ラベルを整数に変換
-        # トークナイザーを使用してテキストをトークン化
+        text = self.dataframe.iloc[idx, 0] # text data
+        label_str = self.dataframe.iloc[idx, 1] # Label (string)
+        label = self.label_dict[label_str] # Convert label to integer
+        # Tokenize text using tokenizer
         encoded_text = self.tokenizer(
             text,
             add_special_tokens=True,
@@ -106,42 +106,42 @@ class LivedoorDataset(Dataset):
             'labels': torch.tensor(label, dtype=torch.long)
         }
 
-# トークナイザーの準備
+# Preparing the tokenizer
 tokenizer = BertJapaneseTokenizer.from_pretrained(
     'cl-tohoku/bert-base-japanese-whole-word-masking',
     mecab_kwargs={"mecab_dic": "ipadic", "mecab_option": None}
 )
 
-# データセットの分割
+# Splitting the dataset
 train_df, temp_df = train_test_split(df, test_size=0.2, random_state=369)
 val_df, test_df = train_test_split(temp_df, test_size=0.5, random_state=369)
 print(f"Train set size: {len(train_df)}")
 print(f"Validation set size: {len(val_df)}")
 print(f"Test set size: {len(test_df)}")
 
-# データセットの作成
+# Creating a dataset
 max_length = 512
 train_dataset = LivedoorDataset(train_df, tokenizer, max_length, dic_cat2id)
 val_dataset = LivedoorDataset(val_df, tokenizer, max_length, dic_cat2id)
 test_dataset = LivedoorDataset(test_df, tokenizer, max_length, dic_cat2id)
 
-# DataLoaderの使用
+# Using DataLoader
 batch_size = 16
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-# モデルの定義
+# Defining the model
 model = BertForSequenceClassification.from_pretrained(
     'cl-tohoku/bert-base-japanese-whole-word-masking',
-    num_labels=len(categories)  # カテゴリの数に基づいて出力層を設定
+    num_labels=len(categories)  # Set output layer based on number of categories
 )
 model.to(device)
 
-# オプティマイザと損失関数の設定
-optimizer = AdamW(model.parameters(), lr=2e-5)#2e-5:93%
+# Optimizer and loss function settings
+optimizer = AdamW(model.parameters(), lr=2e-5) #2e-5:93%
 
-# 訓練関数の定義
+# Defining the training function
 def train_model(model, dataloader, optimizer):
     model.train()
     total_loss = 0
@@ -158,7 +158,7 @@ def train_model(model, dataloader, optimizer):
         optimizer.step()
     return total_loss / len(dataloader)
 
-# 評価関数の定義
+# Definition of evaluation function
 def evaluate_model(model, dataloader):
     model.eval()
     total_loss = 0
@@ -175,25 +175,25 @@ def evaluate_model(model, dataloader):
             preds = outputs[1].argmax(dim=1)
             predictions.extend(preds.cpu().numpy())
             true_labels.extend(labels.cpu().numpy())
-    # 各種スコアの計算
+    # Calculation of various scores
     accuracy = accuracy_score(true_labels, predictions)
     precision = precision_score(true_labels, predictions, average='weighted')
     recall = recall_score(true_labels, predictions, average='weighted')
     f1 = f1_score(true_labels, predictions, average='weighted')
     return total_loss / len(dataloader), accuracy, precision, recall, f1
 
-# 検証データセットの準備（訓練データの一部を検証用に分割）
-val_df = train_df.sample(frac=0.1, random_state=369)  #10%を検証データセットとする
+# Prepare validation dataset (split part of training data for validation)
+val_df = train_df.sample(frac=0.1, random_state=369) #10% is the validation dataset
 train_df = train_df.drop(val_df.index)
 val_dataset = LivedoorDataset(val_df, tokenizer, max_length, dic_cat2id)
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
-# 早期停止クラスの定義
+# Define early stopping class
 class EarlyStopping:
     def __init__(self, patience=3, min_delta=0):
         """
-        patience: 性能が改善されないエポックの最大数
-        min_delta: 改善と見なされる最小の変化量
+        patience: maximum number of epochs without performance improvement
+        min_delta: minimum amount of change to be considered an improvement
         """
         self.patience = patience
         self.min_delta = min_delta
@@ -214,7 +214,7 @@ class EarlyStopping:
 
 early_stopper = EarlyStopping(patience=1, min_delta=0.01)
 
-# 訓練プロセス（早期停止を組み込む）
+# Training process (incorporates early stopping)
 for epoch in range(5):
     print(f"Epoch {epoch + 1}")
     train_loss = train_model(model, train_loader, optimizer)
@@ -230,7 +230,7 @@ for epoch in range(5):
         print("Early stopping")
         break
 
-# 評価プロセス
+# Evaluation process
 test_loss, test_accuracy, test_precision, test_recall, test_f1 = evaluate_model(model, test_loader)
 print(f"Test loss: {test_loss}")
 print(f"Test Accuracy: {test_accuracy}")

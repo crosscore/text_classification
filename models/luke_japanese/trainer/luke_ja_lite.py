@@ -1,13 +1,17 @@
-#linedistilbert_model_trainer.py
+#luke_ja_base_lite.py
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from transformers import BertJapaneseTokenizer, DistilBertForSequenceClassification, Trainer, TrainingArguments
+from sklearn.preprocessing import LabelEncoder
+#from transformers import MLukeTokenizer, LukeForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback
 from datasets import Dataset
 import re
 import time
 import os
+import torch
+import glob
 
 def clean_text(text):
     text = text.strip()
@@ -15,6 +19,17 @@ def clean_text(text):
 
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
+    if isinstance(logits, tuple):
+        logits = logits[0]
+    print(type(logits))
+    if isinstance(logits, np.ndarray):
+        print(logits.shape)
+    elif isinstance(logits, tuple):
+        print("logits is a tuple, check its contents.")
+    if logits.ndim == 1 or logits.shape[1] == 1:
+        predictions = np.where(logits < 0.5, 0, 1)
+    else:
+        predictions = np.argmax(logits, axis=-1)
     predictions = np.argmax(logits, axis=-1)
     accuracy = accuracy_score(labels, predictions)
     precision = precision_score(labels, predictions, average='weighted')
@@ -23,71 +38,77 @@ def compute_metrics(eval_pred):
     return {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1': f1}
 
 start = time.time()
-df = pd.read_csv('../../../data/scraping_data/csv/yahoo_news/concat/yahoo_news_concat_1124_v3.csv')
-
+read_file = glob.glob('../../../data/scraping_data/csv/yahoo_news/concat/*.csv')
+print(f"read_file[0]: {read_file[0]}")
+df = pd.read_csv(read_file[0], dtype={'user': str})
 df['text'] = df['title'].apply(clean_text) + '。' + df['content'].apply(clean_text)
-print(df)
+df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 3000))).reset_index(drop=True)
+print(df['category'].value_counts(dropna=False))
 print(df['text'])
 
-# ラベルのマッピング
-unique_categories = df['category'].unique()
-label_mapping = {category: idx for idx, category in enumerate(unique_categories)}
+le = LabelEncoder()
+df['label'] = le.fit_transform(df['category'])
+label_mapping = dict(zip(le.classes_, range(len(le.classes_))))
 print(label_mapping)
-df['label'] = df['category'].map(label_mapping)
 
-# 訓練データとテストデータに分割
 train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
-
-# データセットの作成
 train_dataset = Dataset.from_dict({'text': train_df['text'].tolist(), 'label': train_df['label'].tolist()})
 test_dataset = Dataset.from_dict({'text': test_df['text'].tolist(), 'label': test_df['label'].tolist()})
+PRE_TRAINED = 'studio-ousia/luke-japanese-lite'
+tokenizer = AutoTokenizer.from_pretrained(PRE_TRAINED, trust_remote_code=True)
 
-# トークナイザーのロード
-PRE_TRAINED = 'line-corporation/line-distilbert-base-japanese'
-tokenizer = BertJapaneseTokenizer.from_pretrained(PRE_TRAINED)
-
-# トークナイズ関数の定義
 def tokenize_function(examples):
     tokenized_inputs =tokenizer(examples['text'], padding=True, truncation=True, max_length=512)
-    # 必要なキーのみを保持する
     tokenized_inputs = {key: tokenized_inputs[key] for key in ['input_ids', 'attention_mask']}
     return tokenized_inputs
 
-# データセットのトークナイズ
 tokenized_train_dataset = train_dataset.map(tokenize_function, batched=True)
 tokenized_test_dataset = test_dataset.map(tokenize_function, batched=True)
 
-# モデルの設定
-model = DistilBertForSequenceClassification.from_pretrained(PRE_TRAINED, num_labels=len(unique_categories))
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model = AutoModelForSequenceClassification.from_pretrained(PRE_TRAINED, num_labels=len(le.classes_)).to(device)
 
-# 訓練設定
+print(f"Class of tokenizer used: {tokenizer.__class__.__name__}")
+print(f"Class of model used: {model.__class__.__name__}")
+
 training_args = TrainingArguments(
     output_dir='./result',
-    num_train_epochs=3,
-    per_device_train_batch_size=8,
-    per_device_eval_batch_size=8,
+    num_train_epochs=12,
+    per_device_train_batch_size=64,
+    per_device_eval_batch_size=64,
+    logging_strategy="epoch",
     evaluation_strategy="epoch",
     save_strategy="epoch",
-    learning_rate=5e-4,
-    remove_unused_columns=True
+    #warmup_steps=500,
+    #lr_scheduler_type="linear",
+    learning_rate=2e-5,
+    load_best_model_at_end=True,
+    metric_for_best_model="loss",
+    greater_is_better=False,
+    remove_unused_columns=True,
+    report_to='tensorboard',
 )
-# トレーナーの設定
+
 trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=tokenized_train_dataset,
     eval_dataset=tokenized_test_dataset,
     tokenizer=tokenizer,
-    compute_metrics=compute_metrics
+    compute_metrics=compute_metrics,
+    callbacks=[EarlyStoppingCallback(early_stopping_patience=1)]
 )
 
 trainer.train()
-output_dir = '../versions/v2/'
+
+output_dir = '../versions/lite/v101/'
 os.makedirs(output_dir, exist_ok=True)
+
 trainer.save_model(output_dir)
 print('The model has been saved.')
 
 test_result = trainer.evaluate(eval_dataset=tokenized_test_dataset)
 print("Accuracy:", test_result['eval_accuracy'])
+
 end = time.time()
 print(f'Elapsed time={end-start}')

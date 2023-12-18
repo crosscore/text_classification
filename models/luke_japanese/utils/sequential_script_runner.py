@@ -4,7 +4,7 @@ import os
 
 start = time.time()
 scripts_directory = r'..\trainer'
-# ディレクトリ内のすべてのPythonファイルを取得
+# Get all Python files in the directory
 python_scripts = [f for f in os.listdir(scripts_directory) if f.endswith('.py')]
 python_scripts.sort()
 

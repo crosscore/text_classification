@@ -20,21 +20,21 @@ def clean_text(text):
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
 
-    # logits がタプルの場合、最初の要素を使用
+# If logits is a tuple, use the first element
     if isinstance(logits, tuple):
         logits = logits[0]
 
-    # logits の型と形状を確認
+    # Check the type and shape of logits
     print(type(logits))
     if isinstance(logits, np.ndarray):
         print(logits.shape)
     elif isinstance(logits, tuple):
         print("logits is a tuple, check its contents.")
 
-    #二値分類の場合、logitsを[0, 1]に変換
+    #For binary classification, convert logits to [0, 1]
     if logits.ndim == 1 or logits.shape[1] == 1:
         predictions = np.where(logits < 0.5, 0, 1)
-    #多クラス分類の場合、argmaxを用いてラベルを取得
+    #For multi-class classification, use argmax to get labels
     else:
         predictions = np.argmax(logits, axis=-1)
 
@@ -76,15 +76,13 @@ print(label_mapping)
 
 train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
 
-# # 訓練データとテストデータのサイズを一時的に減らす
+# # Temporarily reduce the size of training and test data
 # train_df = train_df.sample(frac=0.01, random_state=42)
 # test_df = test_df.sample(frac=0.01, random_state=42)
 
-# データセットの作成
 train_dataset = Dataset.from_dict({'text': train_df['text'].tolist(), 'label': train_df['label'].tolist()})
 test_dataset = Dataset.from_dict({'text': test_df['text'].tolist(), 'label': test_df['label'].tolist()})
 
-# トークナイザーのロード
 PRE_TRAINED = 'line-corporation/line-distilbert-base-japanese'
 tokenizer = BertJapaneseTokenizer.from_pretrained(PRE_TRAINED)
 
@@ -93,7 +91,6 @@ def tokenize_function(examples):
     tokenized_inputs = {key: tokenized_inputs[key] for key in ['input_ids', 'attention_mask']}
     return tokenized_inputs
 
-# データセットのトークナイズ
 tokenized_train_dataset = train_dataset.map(tokenize_function, batched=True)
 tokenized_test_dataset = test_dataset.map(tokenize_function, batched=True)
 
@@ -108,12 +105,12 @@ training_args = TrainingArguments(
     logging_strategy="epoch",
     evaluation_strategy="epoch",
     save_strategy="epoch",
-    warmup_steps=500, # 学習率の下がりを待つステップ数
-    lr_scheduler_type="linear", # 学習率の下がりを選択する方法
+warmup_steps=500, # Number of steps to wait for learning rate to drop
+    lr_scheduler_type="linear", # How to choose a lower learning rate
     learning_rate=5e-5,#2e-5: 85.5%, 6 epoch
     load_best_model_at_end=True,
-    metric_for_best_model="loss", # どのmetricを改善の基準とするか
-    greater_is_better=False, # metricが小さいほど良い場合はFalse
+    metric_for_best_model="loss", # Which metric should be used as the basis for improvement?
+    greater_is_better=False, # False if the smaller the metric, the better
     remove_unused_columns=True,
     report_to='tensorboard',
 )

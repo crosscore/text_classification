@@ -1,7 +1,7 @@
 import re
 
 def sanitize_filename(url):
-    # ファイル名に使えない文字を置き換える
+    # Replace characters that cannot be used in file names
     filename = re.sub(r'[\/:*?"<>|]', '_', url)
     return filename + '.html'
 

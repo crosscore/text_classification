@@ -1,4 +1,4 @@
-#luke_ja_base_lite.py
+#luke_ja_base_lite_restart.py
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -39,10 +39,9 @@ def compute_metrics(eval_pred):
 
 start = time.time()
 read_file = glob.glob('../../../data/scraping_data/csv/yahoo_news/concat/*.csv')
-print(f"read_file[0]: {read_file[0]}")
 df = pd.read_csv(read_file[0], dtype={'user': str})
 df['text'] = df['title'].apply(clean_text) + '。' + df['content'].apply(clean_text)
-df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 3000))).reset_index(drop=True)
+df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 2000))).reset_index(drop=True)
 print(df['category'].value_counts(dropna=False))
 print(df['text'])
 
@@ -54,7 +53,7 @@ print(label_mapping)
 train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
 train_dataset = Dataset.from_dict({'text': train_df['text'].tolist(), 'label': train_df['label'].tolist()})
 test_dataset = Dataset.from_dict({'text': test_df['text'].tolist(), 'label': test_df['label'].tolist()})
-PRE_TRAINED = 'studio-ousia/luke-japanese-base-lite'
+PRE_TRAINED = 'studio-ousia/luke-japanese-lite'
 tokenizer = AutoTokenizer.from_pretrained(PRE_TRAINED, trust_remote_code=True)
 
 def tokenize_function(examples):
@@ -66,14 +65,17 @@ tokenized_train_dataset = train_dataset.map(tokenize_function, batched=True)
 tokenized_test_dataset = test_dataset.map(tokenize_function, batched=True)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+# Loading a pretrained model
 model = AutoModelForSequenceClassification.from_pretrained(PRE_TRAINED, num_labels=len(le.classes_)).to(device)
+tokenizer = AutoTokenizer.from_pretrained(PRE_TRAINED, trust_remote_code=True)
 
 print(f"Class of tokenizer used: {tokenizer.__class__.__name__}")
 print(f"Class of model used: {model.__class__.__name__}")
 
 training_args = TrainingArguments(
     output_dir='./result',
-    num_train_epochs=10,
+    num_train_epochs=20,
     per_device_train_batch_size=64,
     per_device_eval_batch_size=64,
     logging_strategy="epoch",
@@ -99,9 +101,11 @@ trainer = Trainer(
     callbacks=[EarlyStoppingCallback(early_stopping_patience=1)]
 )
 
-trainer.train()
+# Resume training from existing checkpoint
+checkpoint_path = "./result/checkpoint-190/"
+trainer.train(resume_from_checkpoint=checkpoint_path)
 
-output_dir = '../versions/v103/'
+output_dir = '../versions/v101/'
 os.makedirs(output_dir, exist_ok=True)
 
 trainer.save_model(output_dir)

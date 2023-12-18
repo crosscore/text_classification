@@ -14,30 +14,54 @@ files = os.listdir('../csv/yahoo_news/concat/')
 pattern_yesterday = re.compile(rf'{yesterday_date}_v(\d+)\.csv$')
 pattern_today = re.compile(rf'{today_date}_v(\d+)\.csv$')
 
-latest_version_yesterday = 0
-latest_file_yesterday = ''
-latest_version_today = 0
+daily_files = os.listdir('../csv/yahoo_news/daily/')
+daily_pattern = re.compile(rf'yahoo_news_articles_({today_date})_v(\d+)\.csv$')
+
+latest_version = 0
+latest_daily_file = ''
+for file in daily_files:
+    match = daily_pattern.search(file)
+    if match:
+        version = int(match.group(2))
+        if version > latest_version:
+            latest_version = version
+            latest_daily_file = file
+
+# Get the date of the last 7 days
+recent_dates = [(now - datetime.timedelta(days=i)).strftime('%Y%m%d') for i in range(7)]
+
+# Find the latest version of the file for each date
+latest_files = {}
 for file in files:
-    match_yesterday = pattern_yesterday.search(file)
-    match_today = pattern_today.search(file)
-    if match_yesterday:
-        version = int(match_yesterday.group(1))
-        if version > latest_version_yesterday:
-            latest_version_yesterday = version
-            latest_file_yesterday = file
-    elif match_today:
-        version = int(match_today.group(1))
-        if version > latest_version_today:
-            latest_version_today = version
+     for date in recent_dates:
+         pattern = re.compile(rf'{date}_v(\d+)\.csv$')
+         match = pattern.search(file)
+         if match:
+             version = int(match.group(1))
+             if date not in latest_files or version > latest_files[date][1]:
+                 latest_files[date] = (file, version)
 
-if latest_version_today > 0:
-    version = latest_version_today + 1
-else:
-    version = 1
+# select latest file
+latest_file = None
+if latest_files:
+    latest_file = max(latest_files.values(), key=lambda x: x[1])[0]
 
-new_file = f'../csv/yahoo_news/daily/yahoo_news_articles_{today_date}_v{version}.csv'
-output_file = f'../csv/yahoo_news/concat/yahoo_news_concat_{today_date}_v{version}.csv'
-original_file = f'../csv/yahoo_news/concat/yahoo_news_concat_{today_date}_v{latest_version_today}.csv' if latest_version_today > 0 else os.path.join('../csv/yahoo_news/concat/', latest_file_yesterday) if latest_file_yesterday else None
+concat_files = os.listdir('../csv/yahoo_news/concat/')
+concat_pattern = re.compile(r'_v(\d+)\.csv$')
+
+max_version = 0
+for file in concat_files:
+    match = concat_pattern.search(file)
+    if match:
+        version = int(match.group(1))
+        if version > max_version:
+            max_version = version
+
+new_version = max_version + 1
+
+new_file = os.path.join('../csv/yahoo_news/daily/', latest_daily_file) if latest_daily_file else None
+output_file = f'../csv/yahoo_news/concat/yahoo_news_concat_{today_date}_v{new_version}.csv'
+original_file = os.path.join('../csv/yahoo_news/concat/', latest_file) if latest_file else None
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
 print("============ exec concat_only_unique_urls.py ============")

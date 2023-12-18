@@ -18,30 +18,27 @@ def clean_text(text):
     return text
 
 def compute_metrics(eval_pred):
-    logits, labels = eval_pred
-    if isinstance(logits, tuple):
-        logits = logits[0]
-    print(type(logits))
-    if isinstance(logits, np.ndarray):
-        print(logits.shape)
-    elif isinstance(logits, tuple):
-        print("logits is a tuple, check its contents.")
-    if logits.ndim == 1 or logits.shape[1] == 1:
-        predictions = np.where(logits < 0.5, 0, 1)
-    else:
-        predictions = np.argmax(logits, axis=-1)
-    predictions = np.argmax(logits, axis=-1)
-    accuracy = accuracy_score(labels, predictions)
-    precision = precision_score(labels, predictions, average='weighted')
-    recall = recall_score(labels, predictions, average='weighted')
-    f1 = f1_score(labels, predictions, average='weighted')
-    return {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1': f1}
+     logits, labels = eval_pred
+     if isinstance(logits, tuple):
+         logits = logits[0]
+
+     # Calculate predicted values based on the shape of logits
+     if logits.ndim == 1 or logits.shape[1] == 1:
+         predictions = np.where(logits < 0.5, 0, 1)
+     else:
+         predictions = np.argmax(logits, axis=-1)
+
+     # Calculate evaluation metrics
+     accuracy = accuracy_score(labels, predictions)
+     precision = precision_score(labels, predictions, average='weighted')
+     recall = recall_score(labels, predictions, average='weighted')
+     f1 = f1_score(labels, predictions, average='weighted')
+     return {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1': f1}
 
 start = time.time()
 read_file = glob.glob('../../../data/scraping_data/csv/yahoo_news/concat/*.csv')
 df = pd.read_csv(read_file[0])
 df['text'] = df['title'].apply(clean_text) + '。' + df['content'].apply(clean_text)
-#df['url']に'/pickup/'が含まれる行を削除
 df = df[~df['url'].str.contains('/pickup/')]
 print(f"'url'列に'/pickup/'の含まれる行数: {df[df['url'].str.contains('/pickup/')]}")
 print(df['category'].value_counts(dropna=False))

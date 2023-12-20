@@ -90,8 +90,11 @@ def scrape_news(category, url):
                 print(f"{link}")
                 articles.append((category, title, link))
             return articles
-        except:
-            print(f"Failed, retrying in {RETRY_INTERVAL} seconds...")
+        except requests.exceptions.RequestException as e:
+            print(f"Request error: {e}, retrying in {RETRY_INTERVAL} seconds...")
+            time.sleep(RETRY_INTERVAL)
+        except Exception as e:
+            print(f"Unexpected error: {e}, retrying in {RETRY_INTERVAL} seconds...")
             time.sleep(RETRY_INTERVAL)
     print("Failed scrape_news after max retries.")
     return []

@@ -57,11 +57,20 @@ for file in concat_files:
         if version > max_version:
             max_version = version
 
-new_version = max_version + 1
+original_file = os.path.join('../csv/yahoo_news/concat/', latest_file) if latest_file else None
+original_file_pattern = re.compile(rf'yahoo_news_concat_(\d{8})_v(\d+)\.csv$')
+original_file_date = None
+if original_file:
+    match = original_file_pattern.search(original_file)
+    if match:
+        original_file_date = match.group(1)
+if original_file_date is None or original_file_date < today_date:
+    new_version = 1
+else:
+    new_version = max_version + 1
 
 new_file = os.path.join('../csv/yahoo_news/daily/', latest_daily_file) if latest_daily_file else None
 output_file = f'../csv/yahoo_news/concat/yahoo_news_concat_{today_date}_v{new_version}.csv'
-original_file = os.path.join('../csv/yahoo_news/concat/', latest_file) if latest_file else None
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
 print("============ exec concat_only_unique_urls.py ============")

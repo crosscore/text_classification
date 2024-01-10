@@ -71,9 +71,9 @@ print(f"Class of model used: {model.__class__.__name__}")
 
 training_args = TrainingArguments(
     output_dir='./result',
-    num_train_epochs=12,
-    per_device_train_batch_size=8,
-    per_device_eval_batch_size=8,
+    num_train_epochs=5,
+    per_device_train_batch_size=4,
+    per_device_eval_batch_size=4,
     logging_strategy="epoch",
     evaluation_strategy="epoch",
     save_strategy="epoch",

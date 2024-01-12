@@ -39,7 +39,7 @@ start = time.time()
 read_file = glob.glob('../../../data/scraping_data/csv/yahoo_news/concat/*.csv')
 df = pd.read_csv(read_file[0], dtype={'user': str})
 df['text'] = df['title'].apply(clean_text) + '。' + df['content'].apply(clean_text)
-df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 2000))).reset_index(drop=True)
+df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 600))).reset_index(drop=True)
 print(df['category'].value_counts(dropna=False))
 print(df['text'])
 
@@ -73,9 +73,9 @@ print(f"Class of model used: {model.__class__.__name__}")
 
 training_args = TrainingArguments(
     output_dir='./result',
-    num_train_epochs=20,
-    per_device_train_batch_size=64,
-    per_device_eval_batch_size=64,
+    num_train_epochs=5,
+    per_device_train_batch_size=4,
+    per_device_eval_batch_size=4,
     logging_strategy="epoch",
     evaluation_strategy="epoch",
     save_strategy="epoch",
@@ -100,10 +100,10 @@ trainer = Trainer(
 )
 
 # Resume training from existing checkpoint
-checkpoint_path = "./result/checkpoint-190/"
+checkpoint_path = "./result/checkpoint-1440/"
 trainer.train(resume_from_checkpoint=checkpoint_path)
 
-output_dir = '../versions/v101/'
+output_dir = '../versions/v102/'
 os.makedirs(output_dir, exist_ok=True)
 
 trainer.save_model(output_dir)

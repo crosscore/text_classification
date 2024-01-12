@@ -40,7 +40,7 @@ read_file = glob.glob('../../../data/scraping_data/csv/yahoo_news/concat/*.csv')
 print(f"read_file[0]: {read_file[0]}")
 df = pd.read_csv(read_file[0], dtype={'user': str})
 df['text'] = df['title'].apply(clean_text) + '。' + df['content'].apply(clean_text)
-df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 3000))).reset_index(drop=True)
+df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 600))).reset_index(drop=True)
 print(df['category'].value_counts(dropna=False))
 print(df['text'])
 
@@ -72,8 +72,8 @@ print(f"Class of model used: {model.__class__.__name__}")
 training_args = TrainingArguments(
     output_dir='./result',
     num_train_epochs=5,
-    per_device_train_batch_size=4,
-    per_device_eval_batch_size=4,
+    per_device_train_batch_size=6,
+    per_device_eval_batch_size=6,
     logging_strategy="epoch",
     evaluation_strategy="epoch",
     save_strategy="epoch",

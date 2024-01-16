@@ -13,5 +13,6 @@ models/linedistilbert/utils/reuslt
 models/luke_japanese/trainer/result
 models/luke_japanese/versions/
 models/luke_japanese/utils/result
+models/luke_japanese/csv/
 data/experimental_data/csv/
 data/experimental_data/html

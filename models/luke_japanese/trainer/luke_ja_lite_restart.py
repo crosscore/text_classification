@@ -12,6 +12,13 @@ import time
 import os
 import torch
 import glob
+import random
+
+SEED = 42
+torch.manual_seed(SEED)
+torch.cuda.manual_seed_all(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
 
 def clean_text(text):
     text = text.strip()
@@ -36,10 +43,10 @@ def compute_metrics(eval_pred):
      return {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1': f1}
 
 start = time.time()
-read_file = glob.glob('../../../data/scraping_data/csv/yahoo_news/concat/*.csv')
+read_file = glob.glob('../csv/*.csv')
 df = pd.read_csv(read_file[0], dtype={'user': str})
 df['text'] = df['title'].apply(clean_text) + '。' + df['content'].apply(clean_text)
-df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 600))).reset_index(drop=True)
+df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 600), random_state=SEED)).reset_index(drop=True)
 print(df['category'].value_counts(dropna=False))
 print(df['text'])
 

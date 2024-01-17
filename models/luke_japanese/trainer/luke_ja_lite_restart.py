@@ -110,7 +110,7 @@ trainer = Trainer(
 checkpoint_path = "./result/checkpoint-2160/"
 trainer.train(resume_from_checkpoint=checkpoint_path)
 
-output_dir = '../versions/v102/'
+output_dir = '../versions/v101/'
 os.makedirs(output_dir, exist_ok=True)
 
 trainer.save_model(output_dir)

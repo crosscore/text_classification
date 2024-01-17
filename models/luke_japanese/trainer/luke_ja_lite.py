@@ -46,8 +46,12 @@ start = time.time()
 read_file = glob.glob('../csv/*.csv')
 print(f"read_file[0]: {read_file[0]}")
 df = pd.read_csv(read_file[0], dtype={'user': str})
+
+# Remove lines containing the string '/pickup/' in the url string
+df = df[~df['url'].str.contains('/pickup/')]
+
 df['text'] = df['title'].apply(clean_text) + '。' + df['content'].apply(clean_text)
-df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 600), random_state=SEED)).reset_index(drop=True)
+df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 700), random_state=SEED)).reset_index(drop=True)
 print(df['category'].value_counts(dropna=False))
 print(df['text'])
 

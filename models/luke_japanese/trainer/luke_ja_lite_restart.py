@@ -50,7 +50,7 @@ df = pd.read_csv(read_file[0], dtype={'user': str})
 df = df[~df['url'].str.contains('/pickup/')]
 
 df['text'] = df['title'].apply(clean_text) + '。' + df['content'].apply(clean_text)
-df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 666), random_state=SEED)).reset_index(drop=True)
+df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 1500), random_state=SEED)).reset_index(drop=True)
 print(df['category'].value_counts(dropna=False))
 print(df['text'])
 
@@ -111,7 +111,7 @@ trainer = Trainer(
 )
 
 # Resume training from existing checkpoint
-checkpoint_path = "./result/checkpoint-720/"
+checkpoint_path = "./result/checkpoint-1672/"
 trainer.train(resume_from_checkpoint=checkpoint_path)
 
 output_dir = '../versions/v101/'

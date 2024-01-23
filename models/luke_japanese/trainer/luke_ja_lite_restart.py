@@ -111,7 +111,7 @@ trainer = Trainer(
 )
 
 # Resume training from existing checkpoint
-checkpoint_path = "./result/checkpoint-1672/"
+checkpoint_path = "./result/checkpoint-3344/"
 trainer.train(resume_from_checkpoint=checkpoint_path)
 
 output_dir = '../versions/v101/'

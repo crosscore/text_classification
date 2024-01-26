@@ -25,22 +25,22 @@ def clean_text(text):
     return text
 
 def compute_metrics(eval_pred):
-     logits, labels = eval_pred
-     if isinstance(logits, tuple):
-         logits = logits[0]
+    logits, labels = eval_pred
+    if isinstance(logits, tuple):
+        logits = logits[0]
 
-     # Calculate predicted values based on the shape of logits
-     if logits.ndim == 1 or logits.shape[1] == 1:
-         predictions = np.where(logits < 0.5, 0, 1)
-     else:
-         predictions = np.argmax(logits, axis=-1)
+    # Calculate predicted values based on the shape of logits
+    if logits.ndim == 1 or logits.shape[1] == 1:
+        predictions = np.where(logits < 0.5, 0, 1)
+    else:
+        predictions = np.argmax(logits, axis=-1)
 
-     # Calculate evaluation metrics
-     accuracy = accuracy_score(labels, predictions)
-     precision = precision_score(labels, predictions, average='weighted')
-     recall = recall_score(labels, predictions, average='weighted')
-     f1 = f1_score(labels, predictions, average='weighted')
-     return {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1': f1}
+    # Calculate evaluation metrics
+    accuracy = accuracy_score(labels, predictions)
+    precision = precision_score(labels, predictions, average='weighted')
+    recall = recall_score(labels, predictions, average='weighted')
+    f1 = f1_score(labels, predictions, average='weighted')
+    return {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1': f1}
 
 start = time.time()
 read_file = glob.glob('../csv/*.csv')

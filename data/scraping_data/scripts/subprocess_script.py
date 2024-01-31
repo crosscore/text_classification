@@ -7,8 +7,8 @@ script_file2 = "./concat_only_unique_urls.py"
 script_file3 = "./remove_text_outliers.py"
 script_file4 = "./compress_csv_to_zip.py"
 
-subprocess.run(["python", script_file0])
-subprocess.run(["python", script_file1])
-subprocess.run(["python", script_file2])
-subprocess.run(["python", script_file3])
-subprocess.run(["python", script_file4])
+subprocess.run(["python3", script_file0])
+subprocess.run(["python3", script_file1])
+subprocess.run(["python3", script_file2])
+subprocess.run(["python3", script_file3])
+subprocess.run(["python3", script_file4])

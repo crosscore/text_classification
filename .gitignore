@@ -3,7 +3,7 @@ __pycache__
 livedoor_news_data.csv
 **/html/
 **/daily/
-**/yahoo_news/json/
+**/scraping_data/json/
 data/scraping_data/csv/yahoo_news/backup/
 models/linedistilbert/trainer/result/
 models/linedistilbert/versions/

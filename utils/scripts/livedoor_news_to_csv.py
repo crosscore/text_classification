@@ -27,8 +27,8 @@ def check_empty_entries(root_dir):
 
 def create_csv(root_dir, output_file):
     empty_titles, empty_contents = check_empty_entries(root_dir)
-    print(f"空のタイトルの数: {empty_titles}")
-    print(f"空のコンテンツの数: {empty_contents}")
+    print(f"Number of empty titles: {empty_titles}")
+    print(f"Number of empty contents: {empty_contents}")
     with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(['category', 'title', 'content'])

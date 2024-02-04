@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "kinetic-dream-407707",
+  "private_key_id": "fd39121a83ac430b56586d70ef905654c8c3a9d5",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCr+yIzOzjvakIl\nJ4xdF/KJbb1FLl08bA2BecY14Cv3SFOaB4eBvd2JZkw/2SdFKnYZe3C8QZDqYVKY\nidOMunEUkRIJ0d5c3Gn7u9B0oY2lkBQppOMrZmHFYnOdol1OX3IWikY9RcLP0DUb\nf6NxyiIUdfIEphWDB44PC+/qKzQ3GdvVxGf9v09rAZhK6a+IAx5GPiHKoFYnvIXN\nqBRmBjmiEkserqcMfQ6EL+3VVaPeVxUK5+XHZVH6NTPoskhOfn+QBgKly4Y1JiKu\neR9ar00NWxlY99m9BzDV2BISTrWGeaN6UcNGtcggiLWp/14i8RndPlPbHy/tJ+F0\nJKvbCy4vAgMBAAECggEARXhPS1SL3iIVD/8WsvAed6cNgmmFHggjuH5hM5gXCm97\n3cdW1HDGkV7yRARK2aSaShbT5ieyCws/GwDppHoXfZBQMglFgktCwH4QaVxs5Ej7\n7Ap//SMBMYNgYneYqzTg1/wI/W01kU5wdWgstKVK+Orf1ULlg6VEnA1dX0EOeYbd\n2xTb1avrOjoMHCwneXhzgH6N3Z08S9jgv3YZ9sdAiNOrF+jurmo/mW/spvxMgoHU\nxZ3NbD/J+09UnPQkx0PBEold5d9+PGU7cm1aof6g00UhnW2CDB68HkI8NB+M7sJ2\nji8azs1EarPuhxscGkQE7Fe+4WM9kBzrwPF3Wj5OMQKBgQDbA6CI8KYscQzG5pjC\ncTPJxb2D6Gv70LHB+GmOoBrjoIqZRjBW0M/42AA0kkNWZg3j3FZTt1wEasvCav/F\nBJZlnWreWxd9ptdgQk3Y+pr/ceRe8mpsYChTTs79uy2KK2k6QS8qj2sC8XmHCMUG\nhQhCMNg/LQRxix6Io/KSQS/GiQKBgQDJBi2rBSvFqrwyCy7cf6VDzVAAQdoNmx5o\nvHOC5H6U3xK0fV7eqZ4dcNrAIPSUyikTF+9LRqvMncxU8494dD9XyTaTq9PHnJiB\nk8e9F+Xvpv25xEF7dy90aYJDJoUK/wJlVFm3iTF/9HbJaUAdBXKQZnx3F72rDvRz\natl9I7Wg9wKBgQDG3cBDF+CLsgsb//7tb8TKjdbLk5uZh6IgsuOGMjK4ReoTyvvR\nmMF+/wMQuU6TgQ9Tu5pXYcMX77Ec0/NyffviQNHtHWFzIq+mJA5z2voqwMvQuuWP\nirCTFJg3JGLxdwGRd+bQCnHstj7XMktU5C7fi2KP2tySDPSotdVon/A1oQKBgHF6\nr2UPsjoPu9V0Qqvu0tiHmlXK1tE/c9ckKwEFA//+PYzuCRQhJETyZEp5UBh+VtmU\ndV1FM856ddKu+5q/5NIloE2UfiT83YqoZeT1DLRQzIKFq4GLMprAxOwrXodqlWum\nRk85f1wAIN5qL+syHA4wDKseF8/szUoqU0Q1WF7ZAoGAeAdqWODIKYWLjXrpOZ7v\n2gVokByf9WomE2/5WJAL171q9dSQXyJya2Kfa2HdWJpPfZhPgWEn3uKHs0d8mZv2\noLGGstw+Goic7WCRwQDOCT53DcxVUo8dhTMQncP9zVoY1+uezibuVawzYvVlo0Nd\n5EfpLdV8p6t0puEMgt6i+E8=\n-----END PRIVATE KEY-----\n",
+  "client_email": "crosscore@kinetic-dream-407707.iam.gserviceaccount.com",
+  "client_id": "105702407271018625415",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/crosscore%40kinetic-dream-407707.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

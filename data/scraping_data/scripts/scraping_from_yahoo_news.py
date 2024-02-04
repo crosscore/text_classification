@@ -99,6 +99,9 @@ def scrape_news(category, url):
     print("Failed scrape_news after max retries.")
     return []
 
+def clean_text(text):
+    return text.replace('\u2028', '').replace('\u2029', '')
+
 def scrape_article_content(link,  MAX_RETRIES = 6):
     attempts = 0
     while attempts < MAX_RETRIES:
@@ -108,7 +111,8 @@ def scrape_article_content(link,  MAX_RETRIES = 6):
             soup = BeautifulSoup(response.content, 'html.parser')
             paragraph = soup.find('p', class_=lambda x: x and 'highLightSearchTarget' in x)
             if paragraph:
-                return paragraph.get_text(strip=True)
+                clean_paragraph = clean_text(paragraph.get_text(strip=True))
+                return clean_paragraph
             else:
                 return ""
         except requests.RequestException as e:

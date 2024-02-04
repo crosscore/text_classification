@@ -20,7 +20,6 @@ if zip_file:
     # Remove the original ZIP file
     os.remove(zip_path)
 
-    # Print complete messages
     print(f'ZIP file {zip_file} extracted and removed successfully.')
 else:
     print("No ZIP file found in the directory.")

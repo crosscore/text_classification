@@ -1,11 +1,9 @@
 .DS_Store
 __pycache__
 livedoor_news_data.csv
-daily
-html
-data/livedoor/text/
-data/scraping_data/csv/yahoo_news/warehouse/
-data/scraping_data/csv/yahoo_news/daily/
+**/html/
+**/daily/
+**/yahoo_news/json/
 data/scraping_data/csv/yahoo_news/backup/
 models/linedistilbert/trainer/result/
 models/linedistilbert/versions/
@@ -15,4 +13,3 @@ models/luke_japanese/versions/
 models/luke_japanese/utils/result
 models/luke_japanese/csv/
 data/experimental_data/csv/
-data/experimental_data/html

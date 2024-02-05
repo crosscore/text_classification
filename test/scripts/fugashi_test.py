@@ -21,7 +21,7 @@ import MeCab
 # for token in doc:
 #     print(token.text, token.pos_, token.tag_, token.dep_)
 
-sample_txt = 'スターバックスはスタバです。鬼滅の刃が上映中。すもももももももものうち。コロナ禍で大変です'
+sample_txt = 'スターバックスはスタバです。鬼滅の刃が上映中。すもももももももものうち。コロナ禍'
 
 # Specify the path of Neologd
 neologd_path = '/usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ipadic-neologd'

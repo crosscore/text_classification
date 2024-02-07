@@ -50,7 +50,9 @@ df = pd.read_csv(read_file[0], dtype={'user': str})
 df = df[~df['url'].str.contains('/pickup/')]
 
 df['text'] = df['title'].apply(clean_text) + '。' + df['content'].apply(clean_text)
-df = df.groupby('category').apply(lambda x: x.sample(min(len(x), 1500), random_state=SEED)).reset_index(drop=True)
+
+min_category_num = df['category'].value_counts().min()
+df = df.groupby('category').apply(lambda x: x.sample(min(len(x), min_category_num), random_state=SEED)).reset_index(drop=True)
 print(df['category'].value_counts(dropna=False))
 print(df['text'])
 
@@ -85,8 +87,8 @@ print(f"Class of model used: {model.__class__.__name__}")
 training_args = TrainingArguments(
     output_dir='./result',
     num_train_epochs=5,
-    per_device_train_batch_size=6,
-    per_device_eval_batch_size=6,
+    per_device_train_batch_size=4,
+    per_device_eval_batch_size=4,
     logging_strategy="epoch",
     evaluation_strategy="epoch",
     save_strategy="epoch",
@@ -111,7 +113,7 @@ trainer = Trainer(
 )
 
 # Resume training from existing checkpoint
-checkpoint_path = "./result/checkpoint-5016/"
+checkpoint_path = "./result/checkpoint-1411/"
 trainer.train(resume_from_checkpoint=checkpoint_path)
 
 output_dir = '../versions/v101/'

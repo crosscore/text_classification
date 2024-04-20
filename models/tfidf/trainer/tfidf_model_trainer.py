@@ -2,7 +2,6 @@ import pandas as pd
 import glob
 import os
 import re
-import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import make_pipeline
@@ -13,8 +12,7 @@ import time
 
 input_path = glob.glob("../../../../scraping-data/data/csv/yahoo_news/backup/*.csv")
 df = pd.read_csv(input_path[0])
-df = df.groupby("category").tail(2000).reset_index(drop=True)
-nlp = spacy.load("ja_ginza_electra")
+df = df.groupby("category").tail(1000).reset_index(drop=True)
 
 start = time.time()
 le = LabelEncoder()

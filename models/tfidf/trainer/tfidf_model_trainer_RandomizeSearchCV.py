@@ -7,7 +7,8 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import make_pipeline
 from sklearn import metrics
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.model_selection import RandomizedSearchCV, train_test_split
+from scipy.stats import loguniform
 import time
 
 input_path = glob.glob("../../../../scraping-data/data/csv/yahoo_news/backup/*.csv")
@@ -43,13 +44,15 @@ pipeline = make_pipeline(tfidf, MultinomialNB())
 
 # Define the hyperparameter search space
 parameters = {
-    "multinomialnb__alpha": [0.078],
-    "tfidfvectorizer__min_df": [1],
-    "tfidfvectorizer__ngram_range": [(1, 3)],
+    "multinomialnb__alpha": loguniform(1e-2, 1e2),
+    "tfidfvectorizer__min_df": [1, 2, 3],
+    "tfidfvectorizer__ngram_range": [(1, 1), (1, 2), (1, 3)],
 }
 
-# Perform grid search to find the best hyperparameters
-grid = GridSearchCV(pipeline, param_grid=parameters, scoring="accuracy", cv=5)
+# Perform randomized search to find the best hyperparameters
+grid = RandomizedSearchCV(
+    pipeline, param_distributions=parameters, scoring="accuracy", cv=5, n_iter=50
+)
 grid.fit(train_texts, train_labels)
 print("Best parameters:", grid.best_params_)
 print("Best score:", grid.best_score_)

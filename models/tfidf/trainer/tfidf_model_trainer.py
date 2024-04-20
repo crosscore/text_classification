@@ -42,10 +42,16 @@ tfidf = TfidfVectorizer()
 pipeline = make_pipeline(tfidf, MultinomialNB())
 
 # Define the hyperparameter search space
+# parameters = {
+#     "multinomialnb__alpha": [0.078],
+#     "tfidfvectorizer__min_df": [1],
+#     "tfidfvectorizer__ngram_range": [(1, 3)],
+# }
+
 parameters = {
-    "multinomialnb__alpha": [0.078],
+    "multinomialnb__alpha": [1.0],
     "tfidfvectorizer__min_df": [1],
-    "tfidfvectorizer__ngram_range": [(1, 3)],
+    "tfidfvectorizer__ngram_range": [(1, 1)],
 }
 
 # Perform grid search to find the best hyperparameters

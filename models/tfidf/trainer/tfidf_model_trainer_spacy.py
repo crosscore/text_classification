@@ -1,4 +1,3 @@
-# tfidf_model_trainer_v3.py
 import pandas as pd
 import glob
 import os
@@ -24,7 +23,7 @@ input_path = glob.glob(
     "../../../../scraping-data/data/csv/yahoo_news/backup/*.csv"
 )
 df = pd.read_csv(input_path[0])
-df = df.groupby("category").tail(2000).reset_index(drop=True)
+df = df.groupby("category").tail(1000).reset_index(drop=True)
 nlp = spacy.load("ja_ginza_electra")
 
 start = time.time()

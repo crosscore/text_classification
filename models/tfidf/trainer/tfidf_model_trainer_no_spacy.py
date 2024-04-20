@@ -12,17 +12,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import GridSearchCV, train_test_split
 import time
 
-def extract_nouns_adjs(text):
-    words = []
-    doc = nlp(text)
-    for token in doc:
-        if token.pos_ in ["NOUN", "ADJ"]:
-            words.append(token.text)
-    return " ".join(words)
-
-input_path = glob.glob(
-    "../../../../scraping-data/data/csv/yahoo_news/backup/*.csv"
-)
+input_path = glob.glob("../../../../scraping-data/data/csv/yahoo_news/backup/*.csv")
 df = pd.read_csv(input_path[0])
 df = df.groupby("category").tail(2000).reset_index(drop=True)
 nlp = spacy.load("ja_ginza_electra")
@@ -39,8 +29,6 @@ label_mapping = dict(zip(le.classes_, range(len(le.classes_))))
 print("Label mapping:", label_mapping)
 
 texts = df["title"] + " " + df["content"]
-print("Extract only nouns and adjectives")
-texts = texts.apply(extract_nouns_adjs)
 print(df["category"].value_counts())
 
 # Split the dataset into training set and test set
@@ -56,11 +44,6 @@ tfidf = TfidfVectorizer()
 # Add GridSearchCV to the pipeline and tune hyperparameters
 pipeline = make_pipeline(tfidf, MultinomialNB())
 
-# default_parameters = {
-#   'multinomialnb__alpha': [1.0],
-#   'tfidfvectorizer__min_df': [1],
-#   'tfidfvectorizer__ngram_range': [(1, 1)]
-# }
 parameters = {
     "multinomialnb__alpha": [1.0],
     "tfidfvectorizer__min_df": [1],

@@ -99,6 +99,10 @@ model = AutoModelForSequenceClassification.from_pretrained(PRE_TRAINED, num_labe
 print(f"Class of tokenizer used: {tokenizer.__class__.__name__}")
 print(f"Class of model used: {model.__class__.__name__}")
 
+"""
+metric_for_best_model: 最良のモデルを選択するための評価指標。loss: モデルの予測値と正解値の差を定量化
+greater_is_better: loss(損失)は小さいほど良いモデルと考えられるためFalse
+"""
 training_args = TrainingArguments(
     output_dir='./result',
     num_train_epochs=5,

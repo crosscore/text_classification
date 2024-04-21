@@ -1,20 +1,7 @@
 """
-CV"Cross-Validation"（交差検証)は、機械学習モデルの性能評価と過学習防止に使われる手法。
+TF-IDFを用いてテキストデータをベクトル化し、ナイーブベイズ分類器を用いて分類モデルを学習。
 
-データを訓練用とテスト用に分割し、訓練用データでモデルを学習させ、テスト用データでモデルの性能を評価する。ただし、単純にデータを一度だけ分割して評価すると、データの分割方法によって評価結果が大きく変わる可能性がある。
-
-そこで、交差検証では、データを複数回に分けて分割し、それぞれの分割で訓練とテストを行い、その結果を平均化することで、より信頼性の高い評価を行う。
-
-代表的な交差検証の手法は以下の通り。
-1. k-fold交差検証（k-fold CV）: データをk個に分割し、k回の訓練とテストを行う。
-2. StratifiedKFold交差検証: クラスの比率を維持しながらk-fold交差検証を行う。
-3. Leave-one-out交差検証（LOOCV）: データ数をnとすると、n回の訓練とテストを行う。各回で1つのデータをテスト用に、残りのn-1個のデータを訓練用に使用する。
-
-`GridSearchCV`や`RandomizedSearchCV`では、これらの交差検証手法を使用して、ハイパーパラメータの探索を行う。具体的には、各ハイパーパラメータの組み合わせについて、交差検証を行い、その平均スコアを算出し、平均スコアが最も高いハイパーパラメータの組み合わせを、最適なハイパーパラメータとして選択する。
-
-例えば、`RandomizedSearchCV(cv=5)`と指定した場合、5-fold交差検証が使用される。つまり、データを5つに分割し、5回の訓練とテストを行い、その平均スコアを算出する。これを、指定された回数（`n_iter`）だけ繰り返し、最適なハイパーパラメータを見つけ出す。
-
-交差検証を使用することで、モデルの性能をより正確に評価し、過学習を防ぐことができる。また、ハイパーパラメータの探索においても、交差検証を使用することで、より信頼性の高い最適化を行うことができる。
+TF-IDFは、単語の出現頻度と文書内の単語の重要度を考慮してテキストをベクトル変換する手法。
 """
 
 import pandas as pd
@@ -68,7 +55,20 @@ parameters = {
     "tfidfvectorizer__ngram_range": [(1, 1), (1, 2), (1, 3)],
 }
 
-# Perform randomized search to find the best hyperparameters
+"""
+CV"Cross-Validation"（交差検証): 機械学習モデルの性能評価と過学習防止に使用。
+データを訓練用とテスト用に分割し、訓練用データでモデルを学習させ、テスト用データでモデルの性能を評価する。
+単純にデータを一度だけ分割して評価すると、データの分割方法によって評価結果が大きく変わる可能性があるため、交差検証では、データを複数回に分けて分割し、それぞれの分割で訓練とテストを行い、その結果を平均化することで、より信頼性の高い評価を行う。
+
+代表的な交差検証の手法は以下の通り。
+1. k-fold交差検証（k-fold CV）: データをk個に分割し、k回の訓練とテストを行う。
+2. StratifiedKFold交差検証: クラスの比率を維持しながらk-fold交差検証を行う。
+3. Leave-one-out交差検証（LOOCV）: データ数をnとすると、n回の訓練とテストを行う。各回で1つのデータをテスト用に、残りのn-1個のデータを訓練用に使用。
+
+`RandomizedSearchCV(cv=5)`と指定した場合、5-fold交差検証が使用され、データを5つに分割し、5回の訓練とテストを行い、その平均スコアを算出する。これを指定された回数（`n_iter`）だけ繰り返し、最適なハイパーパラメータを求める。
+
+一般的には、RandomizedSearchCVで大まかな最適領域を見つけ、その後その領域内でGridSearchCVを行う
+"""
 grid = RandomizedSearchCV(
     pipeline, param_distributions=parameters, scoring="accuracy", cv=5, n_iter=50
 )
@@ -81,7 +81,13 @@ tfidf = TfidfVectorizer(
     min_df=grid.best_params_["tfidfvectorizer__min_df"],
     ngram_range=grid.best_params_["tfidfvectorizer__ngram_range"],
 )
+
+"""
+多項分布ナイーブベイズ（Multinomial Naive Bayes)
+学習フェーズで、各クラスにおける単語の出現頻度を数え、クラス条件付き確率を計算する。分類フェーズでは、新しい文書に含まれる単語の出現頻度を考慮して、各クラスに属する確率を計算し、最も確率の高いクラスを予測結果とする
+"""
 nb = MultinomialNB(alpha=grid.best_params_["multinomialnb__alpha"])
+
 model = make_pipeline(tfidf, nb)
 
 # Train the model using the best hyperparameters

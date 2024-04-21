@@ -12,7 +12,8 @@ import time
 
 input_path = glob.glob("../../../../scraping-data/data/csv/yahoo_news/backup/*.csv")
 df = pd.read_csv(input_path[0])
-df = df.groupby("category").tail(1000).reset_index(drop=True)
+df = df[~df["url"].str.contains("/pickup/")]
+df = df.groupby("category").tail(2000).reset_index(drop=True)
 
 start = time.time()
 le = LabelEncoder()
@@ -42,17 +43,17 @@ tfidf = TfidfVectorizer()
 pipeline = make_pipeline(tfidf, MultinomialNB())
 
 # Define the hyperparameter search space
+parameters = {
+    "multinomialnb__alpha": [0.078, 0.07, 0.09],
+    "tfidfvectorizer__min_df": [1],
+    "tfidfvectorizer__ngram_range": [(1, 3), (1, 2)],
+}
+
 # parameters = {
 #     "multinomialnb__alpha": [0.078],
 #     "tfidfvectorizer__min_df": [1],
 #     "tfidfvectorizer__ngram_range": [(1, 3)],
 # }
-
-parameters = {
-    "multinomialnb__alpha": [1.0],
-    "tfidfvectorizer__min_df": [1],
-    "tfidfvectorizer__ngram_range": [(1, 1)],
-}
 
 # Perform grid search to find the best hyperparameters
 grid = GridSearchCV(pipeline, param_grid=parameters, scoring="accuracy", cv=5)

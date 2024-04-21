@@ -90,7 +90,6 @@ def objective(trial):
 
 
 start = time.time()
-# データの読み込みとデータ処理
 read_file = glob.glob("../../../../scraping-data/data/csv/yahoo_news/backup/*.csv")
 print(f"read_file[0]: {read_file[0]}")
 df = pd.read_csv(read_file[0], dtype={"user": str})
